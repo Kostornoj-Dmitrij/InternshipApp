@@ -77,7 +77,6 @@
         </button>
     </div>
 
-    <!-- Поле для создания нового проекта -->
     <div class="new-entity-section">
         <label>Новый проект:</label>
         <InputText @bind-Value="newProjectName" placeholder="Введите название проекта" />
@@ -115,7 +114,6 @@
 
     public ProjectService ProjectService { get; set; } = null!;
 
-    // Создание нового направления
     private async Task AddNewDirection()
     {
         if (!string.IsNullOrWhiteSpace(newDirectionName))
@@ -123,16 +121,13 @@
             var newDirection = new Direction { Name = newDirectionName };
             await DirectionService.AddDirectionAsync(newDirection);
             
-            // Обновляем список направлений
             Directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
             
-            // Автоматически выбираем новое направление
             Intern.DirectionId = newDirection.Id;
-            newDirectionName = string.Empty; // Очищаем поле
+            newDirectionName = string.Empty;
         }
     }
 
-    // Создание нового проекта
     private async Task AddNewProject()
     {
         if (!string.IsNullOrWhiteSpace(newProjectName))
@@ -140,12 +135,10 @@
             var newProject = new Project { Name = newProjectName };
             await ProjectService.AddProjectAsync(newProject);
             
-            // Обновляем список проектов
             Projects = (await ProjectService.GetAllProjectsAsync()).ToList();
             
-            // Автоматически выбираем новый проект
             Intern.ProjectId = newProject.Id;
-            newProjectName = string.Empty; // Очищаем поле
+            newProjectName = string.Empty;
         }
     }
 }

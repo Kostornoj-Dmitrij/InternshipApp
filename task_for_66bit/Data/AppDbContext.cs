@@ -20,21 +20,18 @@ public class AppDbContext : DbContext
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Настройка связи Intern -> Direction
         modelBuilder.Entity<Intern>()
             .HasOne(i => i.Direction)
             .WithMany(d => d.Interns)
             .HasForeignKey(i => i.DirectionId)
-            .OnDelete(DeleteBehavior.Cascade);  // Удаление стажёров при удалении направления
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Настройка связи Intern -> Project
         modelBuilder.Entity<Intern>()
             .HasOne(i => i.Project)
             .WithMany(p => p.Interns)
             .HasForeignKey(i => i.ProjectId)
-            .OnDelete(DeleteBehavior.Cascade);  // Удаление стажёров при удалении проекта
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Уникальные индексы
         modelBuilder.Entity<Intern>()
             .HasIndex(i => i.Email)
             .IsUnique();
@@ -63,8 +60,8 @@ public class AppDbContext : DbContext
                 Email = "ivan.ivanov@example.com",
                 PhoneNumber = "+799912345672",
                 DateOfBirth = new DateTime(1990, 1, 1),
-                DirectionId = 1, // Связан с Backend Development
-                ProjectId = 1,   // Связан с Project Alpha
+                DirectionId = 1,
+                ProjectId = 1,
                 CreatedAt = new DateTime(2023, 10, 1),
                 UpdatedAt = new DateTime(2023, 10, 1)
             }
