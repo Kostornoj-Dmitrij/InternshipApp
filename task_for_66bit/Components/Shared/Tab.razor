@@ -1,0 +1,14 @@
+<h3>Tab</h3>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
+
+<div class="tab">
+    <h4>@Title</h4>
+    @ChildContent
+</div>

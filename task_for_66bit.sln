@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "66bit", "66bit\66bit.csproj", "{205D83A1-B8C9-46E3-BF2A-101F2FC3F221}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "task_for_66bit", "task_for_66bit\task_for_66bit.csproj", "{205D83A1-B8C9-46E3-BF2A-101F2FC3F221}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

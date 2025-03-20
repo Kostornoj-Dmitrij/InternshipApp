@@ -1,0 +1,10 @@
+<h3>Tabs</h3>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}
+
+<div class="tabs">
+    @ChildContent
+</div>
