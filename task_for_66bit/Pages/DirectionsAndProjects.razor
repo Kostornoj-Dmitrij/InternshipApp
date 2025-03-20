@@ -1,0 +1,105 @@
+@page "/directions-projects"
+@using task_for_66bit.Data.Models
+@using task_for_66bit.Services
+@using task_for_66bit.Components.Shared
+@inject DirectionService DirectionService
+@inject NavigationManager NavigationManager
+@inject ProjectService ProjectService
+
+<h3>Directions and Projects</h3>
+
+<Tabs>
+    <Tab Title="Directions">
+        <button @onclick="AddDirection">Add Direction</button>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Interns Count</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var direction in directions)
+            {
+                <tr>
+                    <td>@direction.Name</td>
+                    <td>@direction.Interns.Count</td>
+                    <td>
+                        <button @onclick="() => EditDirection(direction)">Edit</button>
+                        <button @onclick="() => DeleteDirection(direction.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </Tab>
+    <Tab Title="Projects">
+        <button @onclick="AddProject">Add Project</button>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Interns Count</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var project in projects)
+            {
+                <tr>
+                    <td>@project.Name</td>
+                    <td>@project.Interns.Count</td>
+                    <td>
+                        <button @onclick="() => EditProject(project)">Edit</button>
+                        <button @onclick="() => DeleteProject(project.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </Tab>
+</Tabs>
+
+@code {
+    private List<Direction> directions;
+    private List<Project> projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+    }
+
+    private async Task AddDirection()
+    {
+        NavigationManager.NavigateTo("/add-direction");
+    }
+
+    private async Task EditDirection(Direction direction)
+    {
+        NavigationManager.NavigateTo($"/edit-direction/{direction.Id}");
+    }
+
+    private async Task DeleteDirection(int id)
+    {
+        await DirectionService.DeleteDirectionAsync(id);
+        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+    }
+
+    private async Task AddProject()
+    {
+        NavigationManager.NavigateTo("/add-project");
+    }
+
+    private async Task EditProject(Project project)
+    {
+        NavigationManager.NavigateTo($"/edit-project/{project.Id}");
+    }
+
+    private async Task DeleteProject(int id)
+    {
+        await ProjectService.DeleteProjectAsync(id);
+        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+    }
+}

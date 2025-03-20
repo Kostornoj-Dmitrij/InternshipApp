@@ -8,17 +8,17 @@
 
 <h3>Interns List</h3>
 
-<InputSelect @bind-Value="SelectedDirectionId" TValue="int" @onchange="ApplyFilters">
-    <option value="-1">All Directions</option> <!-- Используем -1 для "All" -->
-    @foreach (var direction in directions.Where(d => d != null))
+<InputSelect @bind-Value="selectedDirectionId" TValue="int?">
+    <option value="">All Directions</option>
+    @foreach (var direction in directions)
     {
         <option value="@direction.Id">@direction.Name</option>
     }
 </InputSelect>
 
-<InputSelect @bind-Value="SelectedProjectId" TValue="int" @onchange="ApplyFilters">
-    <option value="-1">All Projects</option> <!-- Используем -1 для "All" -->
-    @foreach (var project in projects.Where(p => p != null))
+<InputSelect @bind-Value="selectedProjectId" TValue="int?">
+    <option value="">All Projects</option>
+    @foreach (var project in projects)
     {
         <option value="@project.Id">@project.Name</option>
     }
@@ -51,7 +51,7 @@ else
                 <tr>
                     <td>@intern.FirstName @intern.LastName</td>
                     <td>@(intern.Email ?? "N/A")</td>
-                    <td>@CleanPhoneNumber(intern.PhoneNumber)</td>
+                    <td>@intern.PhoneNumber</td>
                     <td>@(intern.Direction?.Name ?? "N/A")</td>
                     <td>@(intern.Project?.Name ?? "N/A")</td>
                     <td>
@@ -65,12 +65,31 @@ else
 }
 
 @code {
+    private int? _selectedDirectionId;
+    private int? _selectedProjectId;
+    private int? selectedDirectionId
+    {
+        get => _selectedDirectionId;
+        set
+        {
+            _selectedDirectionId = value;
+            ApplyFilters(); // Вызов фильтрации
+        }
+    }
+
+    private int? selectedProjectId
+    {
+        get => _selectedProjectId;
+        set
+        {
+            _selectedProjectId = value;
+            ApplyFilters(); // Вызов фильтрации
+        }
+    }
     private List<Intern> interns = new();
     private List<Intern> filteredInterns = new();
     private List<Direction> directions = new();
     private List<Project> projects = new();
-    private int SelectedDirectionId = -1; // Используем int вместо int?
-    private int SelectedProjectId = -1;   // Используем int вместо int?
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,30 +98,22 @@ else
             interns = (await InternService.GetAllInternsAsync()).ToList();
             directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
             projects = (await ProjectService.GetAllProjectsAsync()).ToList();
-            
-            ApplyFilters();
+            filteredInterns = interns.ToList();
+            Console.WriteLine($"Loaded: {interns.Count} interns");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex}");
-            filteredInterns = new List<Intern>();
+            filteredInterns = new List<Intern>(); // Гарантирует, что filteredInterns не null
         }
     }
 
     private void ApplyFilters()
     {
         filteredInterns = interns
-            .Where(i => 
-                (SelectedDirectionId == -1 || i.DirectionId == SelectedDirectionId) &&
-                (SelectedProjectId == -1 || i.ProjectId == SelectedProjectId))
+            .Where(i => (selectedDirectionId == null || i.DirectionId == selectedDirectionId))
+            .Where(i => (selectedProjectId == null || i.ProjectId == selectedProjectId))
             .ToList();
-    }
-
-    private string CleanPhoneNumber(string phoneNumber)
-    {
-        return string.IsNullOrEmpty(phoneNumber) 
-            ? "N/A" 
-            : new string(phoneNumber.Where(char.IsDigit).ToArray());
     }
 
     private async Task EditIntern(Intern intern)

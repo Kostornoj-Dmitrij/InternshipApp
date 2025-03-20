@@ -1,0 +1,108 @@
+@page "/create-intern"
+@using task_for_66bit.Data.Models
+@using task_for_66bit.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject NavigationManager NavigationManager
+@inject InternService InternService
+@inject DirectionService DirectionService
+@inject ProjectService ProjectService
+
+<h3>Create New Intern</h3>
+
+<EditForm Model="@intern" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>First Name:</label>
+        <InputText class="form-control" @bind-Value="intern.FirstName" />
+        <ValidationMessage For="@(() => intern.FirstName)" />
+    </div>
+
+    <!-- Аналогично для остальных полей -->
+
+    <div class="form-group">
+        <label>Direction:</label>
+        <div class="input-group">
+            <InputSelect class="form-control" @bind-Value="intern.DirectionId">
+                <option value="">Select Direction</option>
+                @foreach (var direction in directions)
+                {
+                    <option value="@direction.Id">@direction.Name</option>
+                }
+            </InputSelect>
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" @onclick="ShowNewDirection">New</button>
+            </div>
+        </div>
+        <ValidationMessage For="@(() => intern.DirectionId)" />
+    </div>
+
+    @if (showNewDirection)
+    {
+        <div class="form-group">
+            <label>New Direction Name:</label>
+            <InputText class="form-control" @bind-Value="newDirectionName" />
+            <button class="btn btn-primary mt-2" @onclick="AddNewDirection">Add Direction</button>
+        </div>
+    }
+
+    <!-- Аналогично для Project -->
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    private Intern intern = new();
+    private List<Direction> directions = new();
+    private List<Project> projects = new();
+    private bool showNewDirection;
+    private string newDirectionName = "";
+    private bool showNewProject;
+    private string newProjectName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await InternService.AddInternAsync(intern);
+            NavigationManager.NavigateTo("/interns");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task AddNewDirection()
+    {
+        if (!string.IsNullOrWhiteSpace(newDirectionName))
+        {
+            var newDirection = new Direction { Name = newDirectionName };
+            await DirectionService.AddDirectionAsync(newDirection);
+            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+            intern.DirectionId = newDirection.Id;
+            showNewDirection = false;
+            newDirectionName = "";
+        }
+    }
+
+    private async Task AddNewProject()
+    {
+        if (!string.IsNullOrWhiteSpace(newProjectName))
+        {
+            var newProject = new Project { Name = newProjectName };
+            await ProjectService.AddProjectAsync(newProject);
+            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+            intern.ProjectId = newProject.Id;
+            showNewProject = false;
+            newProjectName = "";
+        }
+    }
+}
