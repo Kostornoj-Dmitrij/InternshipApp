@@ -1,0 +1,122 @@
+@page "/interns"
+@using task_for_66bit.Data.Models
+@using task_for_66bit.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject InternService InternService
+@inject DirectionService DirectionService
+@inject ProjectService ProjectService
+
+<h3>Interns List</h3>
+
+<InputSelect @bind-Value="SelectedDirectionId" TValue="int" @onchange="ApplyFilters">
+    <option value="-1">All Directions</option> <!-- Используем -1 для "All" -->
+    @foreach (var direction in directions.Where(d => d != null))
+    {
+        <option value="@direction.Id">@direction.Name</option>
+    }
+</InputSelect>
+
+<InputSelect @bind-Value="SelectedProjectId" TValue="int" @onchange="ApplyFilters">
+    <option value="-1">All Projects</option> <!-- Используем -1 для "All" -->
+    @foreach (var project in projects.Where(p => p != null))
+    {
+        <option value="@project.Id">@project.Name</option>
+    }
+</InputSelect>
+
+@if (filteredInterns == null)
+{
+    <p>Loading...</p>
+}
+else if (!filteredInterns.Any())
+{
+    <p>No interns found</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Direction</th>
+                <th>Project</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var intern in filteredInterns)
+            {
+                <tr>
+                    <td>@intern.FirstName @intern.LastName</td>
+                    <td>@(intern.Email ?? "N/A")</td>
+                    <td>@CleanPhoneNumber(intern.PhoneNumber)</td>
+                    <td>@(intern.Direction?.Name ?? "N/A")</td>
+                    <td>@(intern.Project?.Name ?? "N/A")</td>
+                    <td>
+                        <button @onclick="() => EditIntern(intern)">Edit</button>
+                        <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Intern> interns = new();
+    private List<Intern> filteredInterns = new();
+    private List<Direction> directions = new();
+    private List<Project> projects = new();
+    private int SelectedDirectionId = -1; // Используем int вместо int?
+    private int SelectedProjectId = -1;   // Используем int вместо int?
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            interns = (await InternService.GetAllInternsAsync()).ToList();
+            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+            
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex}");
+            filteredInterns = new List<Intern>();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredInterns = interns
+            .Where(i => 
+                (SelectedDirectionId == -1 || i.DirectionId == SelectedDirectionId) &&
+                (SelectedProjectId == -1 || i.ProjectId == SelectedProjectId))
+            .ToList();
+    }
+
+    private string CleanPhoneNumber(string phoneNumber)
+    {
+        return string.IsNullOrEmpty(phoneNumber) 
+            ? "N/A" 
+            : new string(phoneNumber.Where(char.IsDigit).ToArray());
+    }
+
+    private async Task EditIntern(Intern intern)
+    {
+        Console.WriteLine($"Editing intern: {intern.FirstName} {intern.LastName}");
+        //NavigationManager.NavigateTo($"/edit-intern/{intern.Id}");
+    }
+
+    private async Task DeleteIntern(int id)
+    {
+        Console.WriteLine($"Deleting intern with ID: {id}");
+        //await InternService.DeleteInternAsync(id);
+        //interns = (await InternService.GetAllInternsAsync()).ToList();
+        //filteredInterns = interns.ToList();
+        //StateHasChanged();
+    }
+}
