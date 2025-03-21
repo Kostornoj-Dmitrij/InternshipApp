@@ -1,105 +1,289 @@
 @page "/directions-projects"
 @using task_for_66bit.Data.Models
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Web
 @using task_for_66bit.Services
-@using task_for_66bit.Components.Shared
+@using Microsoft.AspNetCore.Components.Forms
 @inject DirectionService DirectionService
-@inject NavigationManager NavigationManager
 @inject ProjectService ProjectService
+@inject NavigationManager NavigationManager
 
 <h3>Directions and Projects</h3>
 
-<Tabs>
-    <Tab Title="Directions">
-        <button @onclick="AddDirection">Add Direction</button>
-        <table>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Interns Count</th>
-                <th>Actions</th>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <button @onclick="@(() => SwitchTab(TabType.Directions))"
+                class="nav-link @(activeTab == TabType.Directions ? "active" : "")">
+            Directions
+        </button>
+    </li>
+    <li class="nav-item">
+        <button @onclick="@(() => SwitchTab(TabType.Projects))"
+                class="nav-link @(activeTab == TabType.Projects ? "active" : "")">
+            Projects
+        </button>
+    </li>
+</ul>
+
+@if (activeTab == TabType.Directions)
+{
+    <button class="btn btn-primary my-2" @onclick="() => ShowEditDirection(null)">Add Direction</button>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Interns</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var direction in directions)
+        {
+            <tr @key="direction.Id">
+                <td>@direction.Name</td>
+                <td>@direction.Interns.Count</td>
+                <td>
+                    <button class="btn btn-sm btn-warning"
+                            @onclick="() => ShowEditDirection(direction)">Edit</button>
+                    <button class="btn btn-sm btn-danger"
+                            @onclick="() => DeleteDirection(direction.Id)">Delete</button>
+                </td>
             </tr>
-            </thead>
-            <tbody>
-            @foreach (var direction in directions)
-            {
-                <tr>
-                    <td>@direction.Name</td>
-                    <td>@direction.Interns.Count</td>
-                    <td>
-                        <button @onclick="() => EditDirection(direction)">Edit</button>
-                        <button @onclick="() => DeleteDirection(direction.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </Tab>
-    <Tab Title="Projects">
-        <button @onclick="AddProject">Add Project</button>
-        <table>
-            <thead>
+        }
+        </tbody>
+    </table>
+}
+else if (activeTab == TabType.Projects)
+{
+    <button class="btn btn-primary my-2" @onclick="() => ShowEditProject(null)">Add Project</button>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Interns</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var project in projects)
+        {
             <tr>
-                <th>Name</th>
-                <th>Interns Count</th>
-                <th>Actions</th>
+                <td>@project.Name</td>
+                <td>@project.Interns.Count</td>
+                <td>
+                    <button class="btn btn-sm btn-warning"
+                            @onclick="() => ShowEditProject(project)">Edit</button>
+                    <button class="btn btn-sm btn-danger"
+                            @onclick="() => DeleteProject(project.Id)">Delete</button>
+                </td>
             </tr>
-            </thead>
-            <tbody>
-            @foreach (var project in projects)
-            {
-                <tr>
-                    <td>@project.Name</td>
-                    <td>@project.Interns.Count</td>
-                    <td>
-                        <button @onclick="() => EditProject(project)">Edit</button>
-                        <button @onclick="() => DeleteProject(project.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </Tab>
-</Tabs>
+        }
+        </tbody>
+    </table>
+}
+@if (showDirectionModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(currentDirection.Id == 0 ? "Add" : "Edit") Direction</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@currentDirection" OnValidSubmit="SaveDirection">
+                        <InputText @bind-Value="currentDirection.Name" class="form-control" />
+                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                        <button type="button" class="btn btn-secondary mt-2"
+                                @onclick="CloseDirectionModal">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showProjectModal)
+{
+    <div class="modal show" style="display: block">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(currentProject.Id == 0 ? "Add" : "Edit") Project</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@currentProject" OnValidSubmit="SaveProject">
+                        <InputText @bind-Value="currentProject.Name" class="form-control" />
+                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                        <button type="button" class="btn btn-secondary mt-2"
+                                @onclick="CloseProjectModal">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    private List<Direction> directions;
-    private List<Project> projects;
+    private List<Direction> directions = new();
+    private List<Project> projects = new();
+    private bool showDirectionModal;
+    private bool showProjectModal;
+    private Direction currentDirection = new();
+    private Project currentProject = new();
+    private string errorMessage = "";
+    public enum TabType { Directions, Projects }
+    
+    private TabType activeTab = TabType.Directions;
 
     protected override async Task OnInitializedAsync()
     {
-        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+        await LoadDirections();
+    }
+    
+    private async Task SwitchTab(TabType tab)
+    {
+        errorMessage = "";
+        Console.WriteLine("Switch");
+        if (!Enum.IsDefined(typeof(TabType), tab))
+        {
+            throw new ArgumentException("Invalid tab type");
+        }
+        activeTab = tab;
+        if (activeTab == TabType.Directions) 
+        {
+            await LoadDirections();
+        }
+        else 
+        {
+            await LoadProjects();
+        }
+        StateHasChanged();
     }
 
-    private async Task AddDirection()
+    private async Task LoadDirections() => directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+    private async Task LoadProjects() => projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+
+    private void ShowEditDirection(Direction? direction)
     {
-        NavigationManager.NavigateTo("/add-direction");
+        if (direction != null)
+        {
+            currentDirection = new Direction
+            {
+                Id = direction.Id,
+                Name = direction.Name,
+                CreatedAt = direction.CreatedAt,
+                UpdatedAt = direction.UpdatedAt
+            };
+        }
+        else
+        {
+            currentDirection = new Direction();
+        }
+
+        showDirectionModal = true;
+        StateHasChanged();
     }
 
-    private async Task EditDirection(Direction direction)
+    private async Task SaveDirection()
     {
-        NavigationManager.NavigateTo($"/edit-direction/{direction.Id}");
+        currentDirection.UpdatedAt = DateTime.UtcNow;
+
+        if (currentDirection.Id == 0)
+        {
+            await DirectionService.AddDirectionAsync(currentDirection);
+        }
+        else
+        {
+            await DirectionService.UpdateDirectionAsync(currentDirection);
+        }
+
+        await LoadDirections();
+        showDirectionModal = false;
     }
 
     private async Task DeleteDirection(int id)
     {
+        Console.WriteLine("DeleteDirection");
+        var direction = directions.First(d => d.Id == id);
+        if (direction.Interns.Any())
+        {
+            errorMessage = "Нельзя удалить направление, в котором есть стажёры.";
+            return;
+        }
         await DirectionService.DeleteDirectionAsync(id);
-        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+        await LoadDirections();
+        StateHasChanged();
     }
-
-    private async Task AddProject()
+    
+    private void ShowEditProject(Project? project)
     {
-        NavigationManager.NavigateTo("/add-project");
+        if (project != null)
+        {
+            currentProject = new Project
+            {
+                Id = project.Id,
+                Name = project.Name,
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt
+            };
+        }
+        else
+        {
+            currentProject = new Project();
+        }
+
+        showProjectModal = true;
+        StateHasChanged();
     }
-
-    private async Task EditProject(Project project)
+    
+    private async Task SaveProject()
     {
-        NavigationManager.NavigateTo($"/edit-project/{project.Id}");
+        currentProject.UpdatedAt = DateTime.UtcNow;
+
+        if (currentProject.Id == 0)
+        {
+            await ProjectService.AddProjectAsync(currentProject);
+        }
+        else
+        {
+            await ProjectService.UpdateProjectAsync(currentProject);
+        }
+
+        await LoadProjects();
+        showProjectModal = false;
     }
 
     private async Task DeleteProject(int id)
     {
+        var project = projects.First(p => p.Id == id);
+        if (project.Interns.Any())
+        {
+            errorMessage = "Нельзя удалить проект, в котором есть стажёры.";
+            return;
+        }
         await ProjectService.DeleteProjectAsync(id);
-        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+        await LoadProjects();
+        StateHasChanged();
+    }
+
+    private void CloseDirectionModal()
+    {
+        showDirectionModal = false;
+        errorMessage = "";
+        StateHasChanged();
+    }
+    private void CloseProjectModal()
+    {
+        showProjectModal = false;
+        errorMessage = "";
+        StateHasChanged();
     }
 }

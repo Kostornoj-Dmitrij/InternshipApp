@@ -1,0 +1,131 @@
+@page "/edit-intern/{Id:int}"
+@using task_for_66bit.Data.Models
+@using task_for_66bit.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject NavigationManager NavigationManager
+@inject InternService InternService
+@inject DirectionService DirectionService
+@inject ProjectService ProjectService
+
+<h3>Edit Intern</h3>
+
+@if (intern == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="@intern" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>First Name:</label>
+            <InputText class="form-control" @bind-Value="intern.FirstName" />
+            <ValidationMessage For="@(() => intern.FirstName)" />
+        </div>
+
+        <div class="form-group">
+            <label>Last Name:</label>
+            <InputText class="form-control" @bind-Value="intern.LastName" />
+            <ValidationMessage For="@(() => intern.LastName)" />
+        </div>
+
+        <div class="form-group">
+            <label>Gender:</label>
+            <InputSelect class="form-control" @bind-Value="intern.Gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => intern.Gender)" />
+        </div>
+
+        <div class="form-group">
+            <label>Email:</label>
+            <InputText class="form-control" @bind-Value="intern.Email" />
+            <ValidationMessage For="@(() => intern.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label>Phone Number:</label>
+            <InputText class="form-control" @bind-Value="intern.PhoneNumber" />
+            <ValidationMessage For="@(() => intern.PhoneNumber)" />
+        </div>
+
+        <div class="form-group">
+            <label>Date of Birth:</label>
+            <InputDate class="form-control" @bind-Value="intern.DateOfBirth" />
+            <ValidationMessage For="@(() => intern.DateOfBirth)" />
+        </div>
+
+        <div class="form-group">
+            <label>Direction:</label>
+            <InputSelect class="form-control" @bind-Value="intern.DirectionId">
+                <option value="">Select Direction</option>
+                @foreach (var direction in directions)
+                {
+                    <option value="@direction.Id">@direction.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => intern.DirectionId)" />
+        </div>
+
+        <div class="form-group">
+            <label>Project:</label>
+            <InputSelect class="form-control" @bind-Value="intern.ProjectId">
+                <option value="">Select Project</option>
+                @foreach (var project in projects)
+                {
+                    <option value="@project.Id">@project.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => intern.ProjectId)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button class="btn btn-secondary" @onclick="() => Cancel()">Cancel</button>
+        </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Intern? intern;
+    private List<Direction> directions = new();
+    private List<Project> projects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            intern = await InternService.GetInternByIdAsync(Id);
+            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading intern: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            Console.WriteLine("Submit");
+            await InternService.UpdateInternAsync(intern!);
+            NavigationManager.NavigateTo("/interns");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Update error: {ex.Message}");
+        }
+    }
+
+    private void Cancel()
+    {
+        Console.WriteLine("Cancel");
+        NavigationManager.NavigateTo("/interns");
+    }
+}

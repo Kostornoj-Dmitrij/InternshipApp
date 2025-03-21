@@ -4,71 +4,100 @@
 @using task_for_66bit.Services
 @inject NavigationManager NavigationManager
 @inject InternService InternService
+@inject ProjectService ProjectService
+@inject DirectionService DirectionService
 
 <h3>Interns List</h3>
 
-<button @onclick="TestClick">Test Click</button>
-
-<select @bind="selectedFilter">
-    <option value="">All</option>
-    <option value="John">John</option>
-    <option value="Jane">Jane</option>
+<select @bind="selectedProjectFilter">
+    <option value="">All Projects</option>
+    @foreach (var project in projects)
+    {
+        <option value="@project.Id">@project.Name</option>
+    }
 </select>
 
-<table>
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var intern in filteredInterns)
+<select @bind="selectedDirectionFilter">
+    <option value="">All Directions</option>
+    @foreach (var direction in directions)
     {
-        <tr>
-            <td>@intern.FirstName @intern.LastName</td>
-            <td>@intern.Email</td>
-            <td>@intern.PhoneNumber</td>
-            <td>
-                <button @onclick="() => EditIntern(intern)">Edit</button>
-                <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
-            </td>
-        </tr>
+        <option value="@direction.Id">@direction.Name</option>
     }
-    </tbody>
-</table>
+</select>
+
+<button @onclick="ApplyFilter">Apply Filter</button>
+
+@if (filteredInterns.Any())
+{
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Project</th>
+            <th>Direction</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var intern in filteredInterns)
+        {
+            <tr>
+                <td>@intern.FirstName @intern.LastName</td>
+                <td>@intern.Email</td>
+                <td>@intern.PhoneNumber</td>
+                <td>@intern.Project?.Name</td>
+                <td>@intern.Direction?.Name</td>
+                <td>
+                    <button @onclick="() => EditIntern(intern)">Edit</button>
+                    <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Не найдено стажёров, удовлетворяющих фильтрам.</p>
+}
 
 @code {
     private List<Intern> interns = new();
     private List<Intern> filteredInterns = new();
-    private string selectedFilter = "";
+    private List<Project> projects = new();
+    private List<Direction> directions = new();
+    private int? selectedProjectFilter;
+    private int? selectedDirectionFilter;
 
     protected override async Task OnInitializedAsync()
     {
         interns = (await InternService.GetAllInternsAsync()).ToList();
+        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
         filteredInterns = interns.ToList();
     }
 
     private void ApplyFilter()
     {
-        if (string.IsNullOrEmpty(selectedFilter))
+        filteredInterns = interns;
+
+        if (selectedProjectFilter.HasValue)
         {
-            filteredInterns = interns.ToList();
+            filteredInterns = filteredInterns
+                .Where(i => i.Project?.Id == selectedProjectFilter.Value)
+                .ToList();
         }
-        else
+
+        if (selectedDirectionFilter.HasValue)
         {
-            filteredInterns = interns
-                .Where(i => i.FirstName.Contains(selectedFilter, StringComparison.OrdinalIgnoreCase))
+            filteredInterns = filteredInterns
+                .Where(i => i.Direction?.Id == selectedDirectionFilter.Value)
                 .ToList();
         }
     }
-
-    private void TestClick()
-    {
-        Console.WriteLine("TEST CLICK WORKED!");
-    }
+    
 
     private void EditIntern(Intern intern)
     {
