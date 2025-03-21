@@ -15,12 +15,45 @@ public class ProjectRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Project>> GetAllAsync()
+    public async Task<(IEnumerable<Project> Projects, int TotalCount)> GetAllAsync(
+        string search = null, 
+        string sortBy = null, 
+        bool sortAsc = true, 
+        int page = 1, 
+        int pageSize = 10)
     {
-        return await _context.Projects
+        // Базовый запрос с включением стажёров
+        var query = _context.Projects
             .Include(p => p.Interns)
-            .AsNoTracking()
+            .AsNoTracking();
+
+        // Поиск по названию проекта
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Name.Contains(search));
+        }
+
+        // Сортировка
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            if (sortBy == "Name")
+            {
+                query = sortAsc ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name);
+            }
+            else if (sortBy == "InternsCount")
+            {
+                query = sortAsc ? query.OrderBy(p => p.Interns.Count) : query.OrderByDescending(p => p.Interns.Count);
+            }
+        }
+
+        // Пагинация
+        var totalCount = await query.CountAsync();
+        var projects = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (projects, totalCount);
     }
 
     public async Task<Project?> GetByIdAsync(int id)

@@ -15,12 +15,42 @@ public class DirectionRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Direction>> GetAllAsync()
+    public async Task<(IEnumerable<Direction> Directions, int TotalCount)> GetAllAsync(
+        string search = null, 
+        string sortBy = null, 
+        bool sortAsc = true, 
+        int page = 1, 
+        int pageSize = 10)
     {
-        return await _context.Directions
+        var query = _context.Directions
             .Include(d => d.Interns)
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(d => d.Name.Contains(search));
+        }
+
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            if (sortBy == "Name")
+            {
+                query = sortAsc ? query.OrderBy(d => d.Name) : query.OrderByDescending(d => d.Name);
+            }
+            else if (sortBy == "InternsCount")
+            {
+                query = sortAsc ? query.OrderBy(d => d.Interns.Count) : query.OrderByDescending(d => d.Interns.Count);
+            }
+        }
+
+        // Пагинация
+        var totalCount = await query.CountAsync();
+        var directions = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (directions, totalCount);
     }
 
     public async Task<Direction?> GetByIdAsync(int id)

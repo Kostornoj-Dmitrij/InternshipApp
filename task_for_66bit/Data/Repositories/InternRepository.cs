@@ -61,4 +61,24 @@ public class InternRepository
     {
         return await _context.Interns.AnyAsync(i => i.Email == email);
     }
+    
+    public async Task<IEnumerable<Intern>> GetInternsByDirectionIdAsync(int directionId)
+    {
+        return await _context.Interns
+            .Where(i => i.DirectionId == directionId)
+            .Include(i => i.Direction)
+            .Include(i => i.Project)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Intern>> GetInternsByProjectIdAsync(int projectId)
+    {
+        return await _context.Interns
+            .Where(i => i.ProjectId == projectId)
+            .Include(i => i.Direction)
+            .Include(i => i.Project)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
