@@ -9,23 +9,29 @@
 
 <h3>Interns List</h3>
 
-<select @bind="selectedProjectFilter">
-    <option value="">All Projects</option>
-    @foreach (var project in projects)
-    {
-        <option value="@project.Id">@project.Name</option>
-    }
-</select>
+<div class="mb-3">
+    <label>Filter by Project:</label>
+    <select @bind="selectedProjectFilter" class="form-select w-50">
+        <option value="">All Projects</option>
+        @foreach (var project in projects)
+        {
+            <option value="@project.Id">@project.Name</option>
+        }
+    </select>
+</div>
 
-<select @bind="selectedDirectionFilter">
-    <option value="">All Directions</option>
-    @foreach (var direction in directions)
-    {
-        <option value="@direction.Id">@direction.Name</option>
-    }
-</select>
+<div class="mb-3">
+    <label>Filter by Direction:</label>
+    <select @bind="selectedDirectionFilter" class="form-select w-50">
+        <option value="">All Directions</option>
+        @foreach (var direction in directions)
+        {
+            <option value="@direction.Id">@direction.Name</option>
+        }
+    </select>
+</div>
 
-<button @onclick="ApplyFilter">Apply Filter</button>
+<button @onclick="ApplyFilter" class="btn btn-primary">Apply Filter</button>
 
 @if (filteredInterns.Any())
 {
@@ -50,8 +56,8 @@
                 <td>@intern.Project?.Name</td>
                 <td>@intern.Direction?.Name</td>
                 <td>
-                    <button @onclick="() => EditIntern(intern)">Edit</button>
-                    <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+                    <button @onclick="() => EditIntern(intern)" class="btn btn-sm btn-warning">Edit</button>
+                    <button @onclick="() => DeleteIntern(intern.Id)" class="btn btn-sm btn-danger">Delete</button>
                 </td>
             </tr>
         }
@@ -74,8 +80,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         interns = (await InternService.GetAllInternsAsync()).ToList();
-        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
-        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+        projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+        directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
         filteredInterns = interns.ToList();
     }
 

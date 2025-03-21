@@ -4,8 +4,10 @@
 @using Microsoft.AspNetCore.Components.Web
 @using task_for_66bit.Services
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.WebUtilities
 @inject DirectionService DirectionService
 @inject ProjectService ProjectService
+@inject InternService InternService
 @inject NavigationManager NavigationManager
 
 <h3>Directions and Projects</h3>
@@ -49,7 +51,11 @@
         {
             <tr @key="direction.Id">
                 <td>@direction.Name</td>
-                <td>@direction.Interns.Count</td>
+                <td>
+                    <button @onclick="() => ShowInterns(direction.Id, TabType.Directions)">
+                        @direction.Interns.Count
+                    </button>
+                </td>
                 <td>
                     <button class="btn btn-sm btn-warning"
                             @onclick="() => ShowEditDirection(direction)">Edit</button>
@@ -77,7 +83,11 @@ else if (activeTab == TabType.Projects)
         {
             <tr>
                 <td>@project.Name</td>
-                <td>@project.Interns.Count</td>
+                <td>
+                    <button @onclick="() => ShowInterns(project.Id, TabType.Projects)">
+                        @project.Interns.Count
+                    </button>
+                </td>
                 <td>
                     <button class="btn btn-sm btn-warning"
                             @onclick="() => ShowEditProject(project)">Edit</button>
@@ -131,10 +141,66 @@ else if (activeTab == TabType.Projects)
     </div>
 }
 
+@if (showInternsModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Interns</h5>
+                    <button type="button" class="btn-close" @onclick="CloseInternsModal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        @foreach (var intern in interns)
+                        {
+                            <li>@intern.FirstName @intern.LastName</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mb-3">
+    <label>Search:</label>
+    <input type="text" @bind="searchQuery" placeholder="Search..." class="form-control w-50" />
+</div>
+
+<div class="mb-3">
+    <label>Sort By:</label>
+    <select @bind="sortField" class="form-control w-50">
+        <option value="Name">Name</option>
+        <option value="InternsCount">Interns Count</option>
+    </select>
+</div>
+<div class="mb-3">
+    <label>Sort Order:</label>
+    <select @bind="sortOrder" class="form-control w-50">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+    </select>
+</div>
+<div class="mb-3">
+    <label class="me-2">Page:</label>
+    <input type="number" @bind="currentPage" min="1" class="form-control" placeholder="Page" />
+    <label class="me-2">Page Size:</label>
+    <input type="number" @bind="pageSize" min="1" class="form-control" placeholder="Page Size" />
+</div>
+<button @onclick="LoadData" class="btn btn-primary">Apply</button>
+
+<!-- Кнопки для пагинации -->
+<div class="mt-3">
+    <button @onclick="PreviousPage" class="btn btn-secondary" disabled="@(currentPage == 1)">Previous</button>
+    <button @onclick="NextPage" class="btn btn-secondary" disabled="@(currentPage * pageSize >= totalCount)">Next</button>
+</div>
+
 @code {
     private List<Direction> directions = new();
     private List<Project> projects = new();
     private bool showDirectionModal;
+    private List<Intern> interns = new();
     private bool showProjectModal;
     private Direction currentDirection = new();
     private Project currentProject = new();
@@ -142,16 +208,23 @@ else if (activeTab == TabType.Projects)
     public enum TabType { Directions, Projects }
     
     private TabType activeTab = TabType.Directions;
+    private string searchQuery = "";
+    private string sortField = "Name";
+    private string sortOrder = "asc";
+    private int currentPage = 1;
+    private int pageSize = 2;
+    private int totalCount = 0;
+    private bool showInternsModal;
 
     protected override async Task OnInitializedAsync()
     {
+        RestoreStateFromUrl();
         await LoadDirections();
     }
     
     private async Task SwitchTab(TabType tab)
     {
         errorMessage = "";
-        Console.WriteLine("Switch");
         if (!Enum.IsDefined(typeof(TabType), tab))
         {
             throw new ArgumentException("Invalid tab type");
@@ -165,11 +238,12 @@ else if (activeTab == TabType.Projects)
         {
             await LoadProjects();
         }
+        UpdateUrl();
         StateHasChanged();
     }
 
-    private async Task LoadDirections() => directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-    private async Task LoadProjects() => projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+    private async Task LoadDirections() => directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+    private async Task LoadProjects() => projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
 
     private void ShowEditDirection(Direction? direction)
     {
@@ -285,5 +359,111 @@ else if (activeTab == TabType.Projects)
         showProjectModal = false;
         errorMessage = "";
         StateHasChanged();
+    }
+    
+    private async Task LoadData()
+    {
+        bool isAscending = sortOrder == "asc";
+        if (activeTab == TabType.Directions)
+        {
+            var result = await DirectionService.GetAllDirectionsAsync(searchQuery, sortField, isAscending, currentPage, pageSize);
+            directions = result.Directions.ToList();
+            totalCount = result.TotalCount;
+        }
+        else
+        {
+            var result = await ProjectService.GetAllProjectsAsync(searchQuery, sortField, isAscending, currentPage, pageSize);
+            projects = result.Projects.ToList();
+            totalCount = result.TotalCount;
+        }
+        UpdateUrl(); // Обновляем URL после загрузки данных
+        StateHasChanged();
+    }
+    
+    private async Task ShowInterns(int id, TabType tabType)
+    {
+        if (tabType == TabType.Directions)
+        {
+            interns = (await InternService.GetInternsByDirectionIdAsync(id)).ToList();
+        }
+        else if (tabType == TabType.Projects)
+        {
+            interns = (await InternService.GetInternsByProjectIdAsync(id)).ToList();
+        }
+        showInternsModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseInternsModal()
+    {
+        showInternsModal = false;
+        interns.Clear();
+        StateHasChanged();
+    }
+    
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadData();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (currentPage * pageSize < totalCount)
+        {
+            currentPage++;
+            await LoadData();
+        }
+    }
+    private void UpdateUrl()
+    {
+        var uri = NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            { "tab", activeTab.ToString() },
+            { "search", searchQuery },
+            { "sortField", sortField },
+            { "sortOrder", sortOrder },
+            { "page", currentPage },
+            { "pageSize", pageSize }
+        });
+        NavigationManager.NavigateTo(uri, forceLoad: false);
+    }
+    private void RestoreStateFromUrl()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("tab", out var tab))
+        {
+            activeTab = Enum.Parse<TabType>(tab);
+        }
+
+        if (queryParams.TryGetValue("search", out var search))
+        {
+            searchQuery = search;
+        }
+
+        if (queryParams.TryGetValue("sortField", out var sortFieldParam))
+        {
+            sortField = sortFieldParam;
+        }
+
+        if (queryParams.TryGetValue("sortOrder", out var sortOrderParam))
+        {
+            sortOrder = sortOrderParam;
+        }
+
+        if (queryParams.TryGetValue("page", out var page))
+        {
+            currentPage = int.Parse(page);
+        }
+
+        if (queryParams.TryGetValue("pageSize", out var pageSizeParam))
+        {
+            pageSize = int.Parse(pageSizeParam);
+        }
     }
 }

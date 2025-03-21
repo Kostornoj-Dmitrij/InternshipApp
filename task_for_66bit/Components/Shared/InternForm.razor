@@ -121,7 +121,7 @@
             var newDirection = new Direction { Name = newDirectionName };
             await DirectionService.AddDirectionAsync(newDirection);
             
-            Directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
+            Directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
             
             Intern.DirectionId = newDirection.Id;
             newDirectionName = string.Empty;
@@ -135,7 +135,7 @@
             var newProject = new Project { Name = newProjectName };
             await ProjectService.AddProjectAsync(newProject);
             
-            Projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+            Projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
             
             Intern.ProjectId = newProject.Id;
             newProjectName = string.Empty;

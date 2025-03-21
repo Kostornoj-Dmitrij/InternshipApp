@@ -100,8 +100,8 @@ else
         try 
         {
             intern = await InternService.GetInternByIdAsync(Id);
-            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+            directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+            projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
         }
         catch (Exception ex)
         {
