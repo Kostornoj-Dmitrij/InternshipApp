@@ -9,9 +9,6 @@
 # Ignore local database
 app.db
 
-# Ignore migrations (optional)
-Migrations/
-
 # User-specific files
 *.rsuser
 *.suo
