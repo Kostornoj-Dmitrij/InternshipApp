@@ -1,162 +1,86 @@
 @page "/interns"
+@using Microsoft.AspNetCore.Components.Web
 @using task_for_66bit.Data.Models
 @using task_for_66bit.Services
-@using Microsoft.AspNetCore.Components.Forms
-@inject InternService InternService
-@inject DirectionService DirectionService
-@inject ProjectService ProjectService
 @inject NavigationManager NavigationManager
+@inject InternService InternService
 
 <h3>Interns List</h3>
 
-<InputSelect @bind-Value="selectedDirectionId" TValue="int?">
-    <option value="">All Directions</option>
-    @foreach (var direction in directions)
-    {
-        <option value="@direction.Id">@direction.Name</option>
-    }
-</InputSelect>
+<button @onclick="TestClick">Test Click</button>
 
-<InputSelect @bind-Value="selectedProjectId" TValue="int?">
-    <option value="">All Projects</option>
-    @foreach (var project in projects)
-    {
-        <option value="@project.Id">@project.Name</option>
-    }
-</InputSelect>
+<select @bind="selectedFilter">
+    <option value="">All</option>
+    <option value="John">John</option>
+    <option value="Jane">Jane</option>
+</select>
 
-@if (filteredInterns == null)
-{
-    <p>Loading...</p>
-}
-else if (!filteredInterns.Any())
-{
-    <p>No interns found</p>
-}
-else
-{
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Direction</th>
-                <th>Project</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var intern in filteredInterns)
-            {
-                <tr @key="intern.Id">
-                    <td>@intern.FirstName @intern.LastName</td>
-                    <td>@(intern.Email ?? "N/A")</td>
-                    <td>@intern.PhoneNumber</td>
-                    <td>@(intern.Direction?.Name ?? "N/A")</td>
-                    <td>@(intern.Project?.Name ?? "N/A")</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning" @onclick="() => EditIntern(intern)">Edit</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteIntern(intern.Id)">Delete</button>
-                        <button @onclick="TestClick">Test Click</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var intern in filteredInterns)
+    {
+        <tr>
+            <td>@intern.FirstName @intern.LastName</td>
+            <td>@intern.Email</td>
+            <td>@intern.PhoneNumber</td>
+            <td>
+                <button @onclick="() => EditIntern(intern)">Edit</button>
+                <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
 
 @code {
-    private int? _selectedDirectionId;
-    private int? _selectedProjectId;
-    private int? selectedDirectionId
-    {
-        get => _selectedDirectionId;
-        set
-        {
-            _selectedDirectionId = value;
-            ApplyFilters(); // Вызов фильтрации
-        }
-    }
-
-    private int? selectedProjectId
-    {
-        get => _selectedProjectId;
-        set
-        {
-            _selectedProjectId = value;
-            ApplyFilters(); // Вызов фильтрации
-        }
-    }
     private List<Intern> interns = new();
     private List<Intern> filteredInterns = new();
-    private List<Direction> directions = new();
-    private List<Project> projects = new();
+    private string selectedFilter = "";
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        interns = (await InternService.GetAllInternsAsync()).ToList();
+        filteredInterns = interns.ToList();
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrEmpty(selectedFilter))
         {
-            interns = (await InternService.GetAllInternsAsync()).ToList();
-            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
             filteredInterns = interns.ToList();
-            Console.WriteLine($"Loaded: {interns.Count} interns");
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Error: {ex}");
-            filteredInterns = new List<Intern>(); // Гарантирует, что filteredInterns не null
+            filteredInterns = interns
+                .Where(i => i.FirstName.Contains(selectedFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
     }
 
-    private void ApplyFilters()
+    private void TestClick()
     {
-        filteredInterns = interns
-            .Where(i => (selectedDirectionId == null || i.DirectionId == selectedDirectionId))
-            .Where(i => (selectedProjectId == null || i.ProjectId == selectedProjectId))
-            .ToList();
-        StateHasChanged();
-    }
-
-    private async Task DeleteIntern(int id)
-    {
-        try
-        {
-            if (id <= 0)
-            {
-                Console.WriteLine("Invalid intern ID");
-                return;
-            }
-            Console.WriteLine($"Deleting intern: {id}"); // Логирование
-            await InternService.DeleteInternAsync(id);
-            var intern = interns.FirstOrDefault(i => i.Id == id);
-            if (intern != null)
-            {
-                interns.Remove(intern);
-                ApplyFilters();
-                StateHasChanged();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Delete error: {ex.Message}");
-        }
+        Console.WriteLine("TEST CLICK WORKED!");
     }
 
     private void EditIntern(Intern intern)
     {
-        if (intern == null)
-        {
-            Console.WriteLine("Intern is null");
-            return;
-        }
-        Console.WriteLine($"Editing intern: {intern.Id}"); // Логирование
+        Console.WriteLine($"Editing intern: {intern.Id}");
         NavigationManager.NavigateTo($"/edit-intern/{intern.Id}");
     }
-    private void TestClick()
+
+    private async Task DeleteIntern(int id)
     {
-        Console.WriteLine("TEST CLICK WORKED!");
-        StateHasChanged();
+        Console.WriteLine($"Deleting intern: {id}");
+        await InternService.DeleteInternAsync(id);
+        interns = (await InternService.GetAllInternsAsync()).ToList();
+        filteredInterns = interns.ToList();
     }
 }
