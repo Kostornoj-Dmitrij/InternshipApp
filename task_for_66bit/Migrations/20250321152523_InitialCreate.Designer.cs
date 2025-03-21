@@ -11,8 +11,8 @@ using task_for_66bit.Data;
 namespace task_for_66bit.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250321015343_UpdatePhoneNumberNullable")]
-    partial class UpdatePhoneNumberNullable
+    [Migration("20250321152523_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
