@@ -17,7 +17,11 @@ public class InternRepository
 
     public async Task<IEnumerable<Intern>> GetAllAsync()
     {
-        return await _context.Interns.ToListAsync();
+        return await _context.Interns
+            .Include(i => i.Direction)
+            .Include(i => i.Project)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<Intern> GetByIdAsync(int id)
@@ -39,11 +43,22 @@ public class InternRepository
 
     public async Task DeleteAsync(int id)
     {
-        var intern = await _context.Interns.FindAsync(id);
-        if (intern != null)
+        var intern = await _context.Interns
+            .Include(i => i.Direction)
+            .Include(i => i.Project)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (intern == null)
         {
-            _context.Interns.Remove(intern);
-            await _context.SaveChangesAsync();
+            throw new InvalidOperationException("Intern not found");
         }
+
+        _context.Interns.Remove(intern);
+        await _context.SaveChangesAsync();
+    }
+    
+    public async Task<bool> ExistsByEmailAsync(string email)
+    {
+        return await _context.Interns.AnyAsync(i => i.Email == email);
     }
 }

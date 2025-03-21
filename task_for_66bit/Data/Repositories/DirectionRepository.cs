@@ -17,12 +17,18 @@ public class DirectionRepository
 
     public async Task<IEnumerable<Direction>> GetAllAsync()
     {
-        return await _context.Directions.ToListAsync();
+        return await _context.Directions
+            .Include(d => d.Interns)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<Direction?> GetByIdAsync(int id)
     {
-        return await _context.Directions.FindAsync(id);
+        return await _context.Directions
+            .Include(d => d.Interns)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == id);
     }
 
     public async Task AddAsync(Direction direction)
@@ -33,8 +39,16 @@ public class DirectionRepository
 
     public async Task UpdateAsync(Direction direction)
     {
-        _context.Directions.Update(direction);
-        await _context.SaveChangesAsync();
+        var existingDirection = await _context.Directions
+            .FirstOrDefaultAsync(d => d.Id == direction.Id);
+
+        if (existingDirection != null)
+        {
+            existingDirection.Name = direction.Name;
+            existingDirection.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task DeleteAsync(int id)
