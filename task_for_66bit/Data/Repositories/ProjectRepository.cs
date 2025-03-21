@@ -1,7 +1,4 @@
 using task_for_66bit.Data.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace task_for_66bit.Data.Repositories;
@@ -22,18 +19,15 @@ public class ProjectRepository
         int page = 1, 
         int pageSize = 10)
     {
-        // Базовый запрос с включением стажёров
         var query = _context.Projects
             .Include(p => p.Interns)
             .AsNoTracking();
 
-        // Поиск по названию проекта
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(p => p.Name.Contains(search));
         }
 
-        // Сортировка
         if (!string.IsNullOrEmpty(sortBy))
         {
             if (sortBy == "Name")
@@ -46,7 +40,6 @@ public class ProjectRepository
             }
         }
 
-        // Пагинация
         var totalCount = await query.CountAsync();
         var projects = await query
             .Skip((page - 1) * pageSize)

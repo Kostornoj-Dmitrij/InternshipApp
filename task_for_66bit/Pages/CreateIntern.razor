@@ -9,7 +9,7 @@
 @inject DirectionService DirectionService
 @inject ProjectService ProjectService
 
-<h3>Create New Intern</h3>
+<h3>Добавить нового стажёра</h3>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
@@ -37,21 +37,21 @@
     <div class="form-group">
         <label>Пол (*)</label>
         <InputSelect class="form-control" @bind-Value="_intern.Gender">
-            <option value="">Выберите пол</option>
-            <option value="Male">М</option>
-            <option value="Female">Ж</option>
+            <option value="">Выбрать пол</option>
+            <option value="Male">Муж</option>
+            <option value="Female">Жен</option>
         </InputSelect>
         <ValidationMessage For="@(() => _intern.Gender)" />
     </div>
 
     <div class="form-group">
-        <label>Email (*)</label>
+        <label>Почта (*)</label>
         <InputText class="form-control" @bind-Value="_intern.Email" />
         <ValidationMessage For="@(() => _intern.Email)" />
     </div>
 
     <div class="form-group">
-        <label>Номер телефона</label>
+        <label>Номер телефона (опционально)</label>
         <InputText class="form-control" @bind-Value="_intern.PhoneNumber" />
         <ValidationMessage For="@(() => _intern.PhoneNumber)" />
     </div>
@@ -64,35 +64,87 @@
 
     <div class="form-group">
         <label>Направление (*)</label>
-        <InputSelect class="form-control" @bind-Value="_intern.DirectionId">
-            <option value="">Выберите направление</option>
-            @foreach (var direction in _directions)
-            {
-                <option value="@direction.Id">@direction.Name</option>
-            }
-        </InputSelect>
+        <div class="input-group">
+            <InputSelect class="form-control" @bind-Value="_intern.DirectionId">
+                <option value="">Выбрать направление</option>
+                @foreach (var direction in _directions)
+                {
+                    <option value="@direction.Id">@direction.Name</option>
+                }
+            </InputSelect>
+            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddDirectionModal()">Добавить направление</button>
+        </div>
         <ValidationMessage For="@(() => _intern.DirectionId)" />
     </div>
 
     <div class="form-group">
         <label>Проект (*)</label>
-        <InputSelect class="form-control" @bind-Value="_intern.ProjectId">
-            <option value="">Выберите проект</option>
-            @foreach (var project in _projects)
-            {
-                <option value="@project.Id">@project.Name</option>
-            }
-        </InputSelect>
+        <div class="input-group">
+            <InputSelect class="form-control" @bind-Value="_intern.ProjectId">
+                <option value="">Выбрать проект</option>
+                @foreach (var project in _projects)
+                {
+                    <option value="@project.Id">@project.Name</option>
+                }
+            </InputSelect>
+            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddProjectModal()">Добавить проект</button>
+        </div>
         <ValidationMessage For="@(() => _intern.ProjectId)" />
     </div>
-
-    <button type="submit" class="btn btn-primary">Добавить стажёра</button>
+    <div>
+        <label></label>
+    </div>
+    <button type="submit" class="btn btn-primary">Добавить</button>
 </EditForm>
+
+@if (_showAddDirectionModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить новое направление</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@_newDirection" OnValidSubmit="SaveNewDirection">
+                        <InputText @bind-Value="_newDirection.Name" class="form-control" placeholder="Direction Name" />
+                        <button type="submit" class="btn btn-primary mt-2">Сохранить</button>
+                        <button type="button" class="btn btn-secondary mt-2" @onclick="CloseAddDirectionModal">Отмена</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showAddProjectModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить новый проект</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@_newProject" OnValidSubmit="SaveNewProject">
+                        <InputText @bind-Value="_newProject.Name" class="form-control" placeholder="Project Name" />
+                        <button type="submit" class="btn btn-primary mt-2">Сохранить</button>
+                        <button type="button" class="btn btn-secondary mt-2" @onclick="CloseAddProjectModal">Отмена</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private Intern _intern = new();
     private List<Direction> _directions = new();
     private List<Project> _projects = new();
+    private bool _showAddDirectionModal;
+    private bool _showAddProjectModal;
+    private Direction _newDirection = new();
+    private Project _newProject = new();
     private string _errorMessage = "";
 
     protected override async Task OnInitializedAsync()
@@ -118,5 +170,41 @@
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
+    }
+
+    private void ShowAddDirectionModal()
+    {
+        _newDirection = new Direction();
+        _showAddDirectionModal = true;
+    }
+
+    private void CloseAddDirectionModal()
+    {
+        _showAddDirectionModal = false;
+    }
+
+    private async Task SaveNewDirection()
+    {
+        await DirectionService.AddDirectionAsync(_newDirection);
+        _directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+        _showAddDirectionModal = false;
+    }
+
+    private void ShowAddProjectModal()
+    {
+        _newProject = new Project();
+        _showAddProjectModal = true;
+    }
+
+    private void CloseAddProjectModal()
+    {
+        _showAddProjectModal = false;
+    }
+
+    private async Task SaveNewProject()
+    {
+        await ProjectService.AddProjectAsync(_newProject);
+        _projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+        _showAddProjectModal = false;
     }
 }

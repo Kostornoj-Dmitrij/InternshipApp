@@ -1,9 +1,9 @@
 @using task_for_66bit.Data.Models
 
-<EditForm Model="@FilterCriteria" OnValidSubmit="@HandleFilter">
+<EditForm Model="@_filterCriteria" OnValidSubmit="@HandleFilter">
     <div>
         <label>Direction:</label>
-        <InputSelect @bind-Value="FilterCriteria.DirectionId">
+        <InputSelect @bind-Value="_filterCriteria.DirectionId">
             <option value="">All Directions</option>
             @foreach (var direction in Directions)
             {
@@ -14,7 +14,7 @@
 
     <div>
         <label>Project:</label>
-        <InputSelect @bind-Value="FilterCriteria.ProjectId">
+        <InputSelect @bind-Value="_filterCriteria.ProjectId">
             <option value="">All Projects</option>
             @foreach (var project in Projects)
             {
@@ -31,16 +31,16 @@
     public EventCallback<FilterCriteriaClass> OnFilter { get; set; }
 
     [Parameter]
-    public List<Direction> Directions { get; set; } = new List<Direction>();
+    public List<Direction> Directions { get; set; } = new();
 
     [Parameter]
-    public List<Project> Projects { get; set; } = new List<Project>();
+    public List<Project> Projects { get; set; } = new();
 
-    private FilterCriteriaClass FilterCriteria = new FilterCriteriaClass();
+    private FilterCriteriaClass _filterCriteria = new();
 
     private async Task HandleFilter()
     {
-        await OnFilter.InvokeAsync(FilterCriteria);
+        await OnFilter.InvokeAsync(_filterCriteria);
     }
 
     public class FilterCriteriaClass

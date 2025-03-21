@@ -1,8 +1,6 @@
 using task_for_66bit.Data.Models;
 using task_for_66bit.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace task_for_66bit.Controllers;
 
@@ -27,10 +25,6 @@ public class InternsController : ControllerBase
     public async Task<ActionResult<Intern>> GetById(int id)
     {
         var intern = await _internService.GetInternByIdAsync(id);
-        if (intern == null)
-        {
-            return NotFound();
-        }
         return Ok(intern);
     }
 

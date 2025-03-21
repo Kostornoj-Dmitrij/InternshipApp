@@ -1,7 +1,4 @@
 using task_for_66bit.Data.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace task_for_66bit.Data.Repositories;
@@ -43,7 +40,6 @@ public class DirectionRepository
             }
         }
 
-        // Пагинация
         var totalCount = await query.CountAsync();
         var directions = await query
             .Skip((page - 1) * pageSize)

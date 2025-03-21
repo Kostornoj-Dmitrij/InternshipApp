@@ -1,8 +1,6 @@
 using task_for_66bit.Data.Models;
 using task_for_66bit.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace task_for_66bit.Controllers;
 

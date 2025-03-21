@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace task_for_66bit.Data.Models;
 
 public class Direction
