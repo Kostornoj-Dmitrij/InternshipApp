@@ -5,6 +5,7 @@
 @inject InternService InternService
 @inject DirectionService DirectionService
 @inject ProjectService ProjectService
+@inject NavigationManager NavigationManager
 
 <h3>Interns List</h3>
 
@@ -48,15 +49,16 @@ else
         <tbody>
             @foreach (var intern in filteredInterns)
             {
-                <tr>
+                <tr @key="intern.Id">
                     <td>@intern.FirstName @intern.LastName</td>
                     <td>@(intern.Email ?? "N/A")</td>
                     <td>@intern.PhoneNumber</td>
                     <td>@(intern.Direction?.Name ?? "N/A")</td>
                     <td>@(intern.Project?.Name ?? "N/A")</td>
                     <td>
-                        <button @onclick="() => EditIntern(intern)">Edit</button>
-                        <button @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+                        <button class="btn btn-sm btn-warning" @onclick="() => EditIntern(intern)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteIntern(intern.Id)">Delete</button>
+                        <button @onclick="TestClick">Test Click</button>
                     </td>
                 </tr>
             }
@@ -114,20 +116,47 @@ else
             .Where(i => (selectedDirectionId == null || i.DirectionId == selectedDirectionId))
             .Where(i => (selectedProjectId == null || i.ProjectId == selectedProjectId))
             .ToList();
-    }
-
-    private async Task EditIntern(Intern intern)
-    {
-        Console.WriteLine($"Editing intern: {intern.FirstName} {intern.LastName}");
-        //NavigationManager.NavigateTo($"/edit-intern/{intern.Id}");
+        StateHasChanged();
     }
 
     private async Task DeleteIntern(int id)
     {
-        Console.WriteLine($"Deleting intern with ID: {id}");
-        //await InternService.DeleteInternAsync(id);
-        //interns = (await InternService.GetAllInternsAsync()).ToList();
-        //filteredInterns = interns.ToList();
-        //StateHasChanged();
+        try
+        {
+            if (id <= 0)
+            {
+                Console.WriteLine("Invalid intern ID");
+                return;
+            }
+            Console.WriteLine($"Deleting intern: {id}"); // Логирование
+            await InternService.DeleteInternAsync(id);
+            var intern = interns.FirstOrDefault(i => i.Id == id);
+            if (intern != null)
+            {
+                interns.Remove(intern);
+                ApplyFilters();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Delete error: {ex.Message}");
+        }
+    }
+
+    private void EditIntern(Intern intern)
+    {
+        if (intern == null)
+        {
+            Console.WriteLine("Intern is null");
+            return;
+        }
+        Console.WriteLine($"Editing intern: {intern.Id}"); // Логирование
+        NavigationManager.NavigateTo($"/edit-intern/{intern.Id}");
+    }
+    private void TestClick()
+    {
+        Console.WriteLine("TEST CLICK WORKED!");
+        StateHasChanged();
     }
 }
