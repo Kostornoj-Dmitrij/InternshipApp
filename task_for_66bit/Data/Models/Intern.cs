@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace task_for_66bit.Data.Models;
 
@@ -19,8 +20,7 @@ public class Intern
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Phone(ErrorMessage = "Некорректный номер телефона")]
-    [RegularExpression(@"^\+7\d{10}$", ErrorMessage = "Phone must start with +7 followed by 10 digits.")]
+    [CustomValidation(typeof(Intern), nameof(ValidatePhoneNumber))]
     public string? PhoneNumber { get; set; } = string.Empty;
 
     [Required]
@@ -38,4 +38,27 @@ public class Intern
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    public static ValidationResult? ValidatePhoneNumber(string? phoneNumber, ValidationContext context)
+    {
+        if (string.IsNullOrEmpty(phoneNumber))
+        {
+            var instance = context.ObjectInstance;
+            var propertyInfo = instance.GetType().GetProperty(context.MemberName!);
+            if (propertyInfo != null)
+            {
+                propertyInfo.SetValue(instance, null);
+            }
+
+            return ValidationResult.Success;
+        }
+
+        var regex = new Regex(@"^\+7\d{10}$");
+        if (!regex.IsMatch(phoneNumber))
+        {
+            return new ValidationResult("Phone must start with +7 followed by 10 digits.");
+        }
+
+        return ValidationResult.Success;
+    }
 }
