@@ -14,9 +14,14 @@ public class DirectionService
         _directionRepository = directionRepository;
     }
 
-    public async Task<IEnumerable<Direction>> GetAllDirectionsAsync()
+    public async Task<(IEnumerable<Direction> Directions, int TotalCount)> GetAllDirectionsAsync(
+        string search = null, 
+        string sortBy = null, 
+        bool sortAsc = true, 
+        int page = 1, 
+        int pageSize = 10)
     {
-        return await _directionRepository.GetAllAsync();
+        return await _directionRepository.GetAllAsync(search, sortBy, sortAsc, page, pageSize);
     }
 
     public async Task<Direction?> GetDirectionByIdAsync(int id)

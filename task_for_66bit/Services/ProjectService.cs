@@ -14,9 +14,14 @@ public class ProjectService
         _projectRepository = projectRepository;
     }
 
-    public async Task<IEnumerable<Project>> GetAllProjectsAsync()
+    public async Task<(IEnumerable<Project> Projects, int TotalCount)> GetAllProjectsAsync(
+        string search = null, 
+        string sortBy = null, 
+        bool sortAsc = true, 
+        int page = 1, 
+        int pageSize = 10)
     {
-        return await _projectRepository.GetAllAsync();
+        return await _projectRepository.GetAllAsync(search, sortBy, sortAsc, page, pageSize);
     }
 
     public async Task<Project?> GetProjectByIdAsync(int id)

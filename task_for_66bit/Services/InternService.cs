@@ -53,4 +53,14 @@ public class InternService
     {
         return !await _internRepository.ExistsByEmailAsync(email);
     }
+    
+    public async Task<IEnumerable<Intern>> GetInternsByDirectionIdAsync(int directionId)
+    {
+        return await _internRepository.GetInternsByDirectionIdAsync(directionId);
+    }
+
+    public async Task<IEnumerable<Intern>> GetInternsByProjectIdAsync(int projectId)
+    {
+        return await _internRepository.GetInternsByProjectIdAsync(projectId);
+    }
 }
