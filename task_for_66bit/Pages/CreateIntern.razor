@@ -6,71 +6,163 @@
 @inject InternService InternService
 @inject DirectionService DirectionService
 @inject ProjectService ProjectService
+@using Microsoft.AspNetCore.WebUtilities
 
 <h3>Create New Intern</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<!-- Кнопки для добавления направления и проекта -->
+<div class="mb-3">
+    <button @onclick="@(() => ShowAddDirectionModal())">Add New Direction</button>
+    <button @onclick="@(() => ShowAddProjectModal())">Add New Project</button>
+</div>
 
 <EditForm Model="@intern" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
+    <!-- Поля формы -->
     <div class="form-group">
         <label>First Name:</label>
         <InputText class="form-control" @bind-Value="intern.FirstName" />
         <ValidationMessage For="@(() => intern.FirstName)" />
     </div>
 
-    <!-- Аналогично для остальных полей -->
+    <div class="form-group">
+        <label>Last Name:</label>
+        <InputText class="form-control" @bind-Value="intern.LastName" />
+        <ValidationMessage For="@(() => intern.LastName)" />
+    </div>
+
+    <div class="form-group">
+        <label>Gender:</label>
+        <InputSelect class="form-control" @bind-Value="intern.Gender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => intern.Gender)" />
+    </div>
+
+    <div class="form-group">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="intern.Email" />
+        <ValidationMessage For="@(() => intern.Email)" />
+    </div>
+
+    <div class="form-group">
+        <label>Phone Number (optional):</label>
+        <InputText class="form-control" @bind-Value="intern.PhoneNumber" />
+        <ValidationMessage For="@(() => intern.PhoneNumber)" />
+    </div>
+
+    <div class="form-group">
+        <label>Date of Birth:</label>
+        <InputDate class="form-control" @bind-Value="intern.DateOfBirth" />
+        <ValidationMessage For="@(() => intern.DateOfBirth)" />
+    </div>
 
     <div class="form-group">
         <label>Direction:</label>
-        <div class="input-group">
-            <InputSelect class="form-control" @bind-Value="intern.DirectionId">
-                <option value="">Select Direction</option>
-                @foreach (var direction in directions)
-                {
-                    <option value="@direction.Id">@direction.Name</option>
-                }
-            </InputSelect>
-            <div class="input-group-append">
-                <button class="btn btn-outline-secondary" type="button" @onclick="ShowNewDirection">New</button>
-            </div>
-        </div>
+        <InputSelect class="form-control" @bind-Value="intern.DirectionId">
+            <option value="">Select Direction</option>
+            @foreach (var direction in directions)
+            {
+                <option value="@direction.Id">@direction.Name</option>
+            }
+        </InputSelect>
         <ValidationMessage For="@(() => intern.DirectionId)" />
     </div>
 
-    @if (showNewDirection)
-    {
-        <div class="form-group">
-            <label>New Direction Name:</label>
-            <InputText class="form-control" @bind-Value="newDirectionName" />
-            <button class="btn btn-primary mt-2" @onclick="AddNewDirection">Add Direction</button>
-        </div>
-    }
-
-    <!-- Аналогично для Project -->
+    <div class="form-group">
+        <label>Project:</label>
+        <InputSelect class="form-control" @bind-Value="intern.ProjectId">
+            <option value="">Select Project</option>
+            @foreach (var project in projects)
+            {
+                <option value="@project.Id">@project.Name</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => intern.ProjectId)" />
+    </div>
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </EditForm>
+
+<!-- Модальное окно для добавления направления -->
+@if (showAddDirectionModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Direction</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newDirection" OnValidSubmit="SaveNewDirection">
+                        <InputText @bind-Value="newDirection.Name" class="form-control" placeholder="Direction Name" />
+                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                        <button type="button" class="btn btn-secondary mt-2" @onclick="CloseAddDirectionModal">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Модальное окно для добавления проекта -->
+@if (showAddProjectModal)
+{
+    <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Project</h5>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newProject" OnValidSubmit="SaveNewProject">
+                        <InputText @bind-Value="newProject.Name" class="form-control" placeholder="Project Name" />
+                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                        <button type="button" class="btn btn-secondary mt-2" @onclick="CloseAddProjectModal">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private Intern intern = new();
     private List<Direction> directions = new();
     private List<Project> projects = new();
-    private bool showNewDirection;
-    private string newDirectionName = "";
-    private bool showNewProject;
-    private string newProjectName = "";
+    private bool showAddDirectionModal = false;
+    private bool showAddProjectModal = false;
+    private Direction newDirection = new();
+    private Project newProject = new();
+    private string errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
-        directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-        projects = (await ProjectService.GetAllProjectsAsync()).ToList();
+        directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+        projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
     }
 
     private async Task HandleValidSubmit()
     {
         try
         {
+            bool isEmailUnique = await InternService.IsEmailUniqueAsync(intern.Email);
+            if (!isEmailUnique)
+            {
+                errorMessage = "Стажёр с таким email уже существует.";
+                return;
+            }
             await InternService.AddInternAsync(intern);
             NavigationManager.NavigateTo("/interns");
         }
@@ -80,29 +172,47 @@
         }
     }
 
-    private async Task AddNewDirection()
+    private void ShowAddDirectionModal()
     {
-        if (!string.IsNullOrWhiteSpace(newDirectionName))
-        {
-            var newDirection = new Direction { Name = newDirectionName };
-            await DirectionService.AddDirectionAsync(newDirection);
-            directions = (await DirectionService.GetAllDirectionsAsync()).ToList();
-            intern.DirectionId = newDirection.Id;
-            showNewDirection = false;
-            newDirectionName = "";
-        }
+        Console.WriteLine("ShowAddDirectionModal called"); // Логирование
+        newDirection = new Direction();
+        showAddDirectionModal = true;
+        StateHasChanged(); // Принудительное обновление интерфейса
     }
 
-    private async Task AddNewProject()
+    private void CloseAddDirectionModal()
     {
-        if (!string.IsNullOrWhiteSpace(newProjectName))
-        {
-            var newProject = new Project { Name = newProjectName };
-            await ProjectService.AddProjectAsync(newProject);
-            projects = (await ProjectService.GetAllProjectsAsync()).ToList();
-            intern.ProjectId = newProject.Id;
-            showNewProject = false;
-            newProjectName = "";
-        }
+        showAddDirectionModal = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveNewDirection()
+    {
+        await DirectionService.AddDirectionAsync(newDirection);
+        directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+        showAddDirectionModal = false;
+        StateHasChanged();
+    }
+
+    private void ShowAddProjectModal()
+    {
+        Console.WriteLine("ShowAddProjectModal called"); // Логирование
+        newProject = new Project();
+        showAddProjectModal = true;
+        StateHasChanged(); // Принудительное обновление интерфейса
+    }
+
+    private void CloseAddProjectModal()
+    {
+        showAddProjectModal = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveNewProject()
+    {
+        await ProjectService.AddProjectAsync(newProject);
+        projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+        showAddProjectModal = false;
+        StateHasChanged();
     }
 }
