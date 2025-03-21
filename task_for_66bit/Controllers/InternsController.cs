@@ -56,7 +56,14 @@ public class InternsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _internService.DeleteInternAsync(id);
-        return NoContent();
+        try
+        {
+            await _internService.DeleteInternAsync(id);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }
