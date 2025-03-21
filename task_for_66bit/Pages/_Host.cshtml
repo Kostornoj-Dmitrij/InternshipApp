@@ -1,0 +1,26 @@
+@page "/"
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using task_for_66bit.Components
+@namespace task_for_66bit.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>task_for_66bit</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="/bootstrap/bootstrap.min.css" />
+    <link href="/css/app.css" rel="stylesheet" />
+    <link href="task_for_66bit.styles.css" rel="stylesheet" />
+</head>
+<body>
+<component type="typeof(App)" render-mode="ServerPrerendered" />
+
+<script src="_framework/blazor.server.js"></script>
+</body>
+</html>
