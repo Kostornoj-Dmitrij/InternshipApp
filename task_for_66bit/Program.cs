@@ -22,6 +22,14 @@ builder.Services.AddScoped<InternService>();
 builder.Services.AddScoped<DirectionService>();
 builder.Services.AddScoped<ProjectService>();
 
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+builder.Services.AddServerSideBlazor().AddHubOptions(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

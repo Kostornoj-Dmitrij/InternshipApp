@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <div class="page">
     <div class="sidebar">
@@ -21,3 +22,15 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.Uri;
+        if (NavigationManager.Uri.EndsWith("/") || NavigationManager.Uri.EndsWith("/index.html"))
+        {
+            NavigationManager.NavigateTo("interns");
+        }
+        base.OnInitialized();
+    }
+}
