@@ -9,81 +9,81 @@
 
 <h3>Edit Intern</h3>
 
-@if (intern == null)
+@if (_intern == null)
 {
     <p>Loading...</p>
 }
 else
 {
-    <EditForm Model="@intern" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@_intern" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
         <div class="form-group">
-            <label>First Name:</label>
-            <InputText class="form-control" @bind-Value="intern.FirstName" />
-            <ValidationMessage For="@(() => intern.FirstName)" />
+            <label>Имя (*)</label>
+            <InputText class="form-control" @bind-Value="_intern.FirstName" />
+            <ValidationMessage For="@(() => _intern.FirstName)" />
         </div>
 
         <div class="form-group">
-            <label>Last Name:</label>
-            <InputText class="form-control" @bind-Value="intern.LastName" />
-            <ValidationMessage For="@(() => intern.LastName)" />
+            <label>Фамилия (*)</label>
+            <InputText class="form-control" @bind-Value="_intern.LastName" />
+            <ValidationMessage For="@(() => _intern.LastName)" />
         </div>
 
         <div class="form-group">
-            <label>Gender:</label>
-            <InputSelect class="form-control" @bind-Value="intern.Gender">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+            <label>Пол (*)</label>
+            <InputSelect class="form-control" @bind-Value="_intern.Gender">
+                <option value="Male">М</option>
+                <option value="Female">Ж</option>
             </InputSelect>
-            <ValidationMessage For="@(() => intern.Gender)" />
+            <ValidationMessage For="@(() => _intern.Gender)" />
         </div>
 
         <div class="form-group">
-            <label>Email:</label>
-            <InputText class="form-control" @bind-Value="intern.Email" />
-            <ValidationMessage For="@(() => intern.Email)" />
+            <label>Почта (*)</label>
+            <InputText class="form-control" @bind-Value="_intern.Email" />
+            <ValidationMessage For="@(() => _intern.Email)" />
         </div>
 
         <div class="form-group">
-            <label>Phone Number:</label>
-            <InputText class="form-control" @bind-Value="intern.PhoneNumber" />
-            <ValidationMessage For="@(() => intern.PhoneNumber)" />
+            <label>Номер телефона</label>
+            <InputText class="form-control" @bind-Value="_intern.PhoneNumber" />
+            <ValidationMessage For="@(() => _intern.PhoneNumber)" />
         </div>
 
         <div class="form-group">
-            <label>Date of Birth:</label>
-            <InputDate class="form-control" @bind-Value="intern.DateOfBirth" />
-            <ValidationMessage For="@(() => intern.DateOfBirth)" />
+            <label>Дата рождения (*)</label>
+            <InputDate class="form-control" @bind-Value="_intern.DateOfBirth" />
+            <ValidationMessage For="@(() => _intern.DateOfBirth)" />
         </div>
 
         <div class="form-group">
-            <label>Direction:</label>
-            <InputSelect class="form-control" @bind-Value="intern.DirectionId">
-                <option value="">Select Direction</option>
-                @foreach (var direction in directions)
+            <label>Direction (*)</label>
+            <InputSelect class="form-control" @bind-Value="_intern.DirectionId">
+                <option value="">Выберите направление</option>
+                @foreach (var direction in _directions)
                 {
                     <option value="@direction.Id">@direction.Name</option>
                 }
             </InputSelect>
-            <ValidationMessage For="@(() => intern.DirectionId)" />
+            <ValidationMessage For="@(() => _intern.DirectionId)" />
         </div>
 
         <div class="form-group">
-            <label>Project:</label>
-            <InputSelect class="form-control" @bind-Value="intern.ProjectId">
-                <option value="">Select Project</option>
-                @foreach (var project in projects)
+            <label>Проект (*)</label>
+            <InputSelect class="form-control" @bind-Value="_intern.ProjectId">
+                <option value="">Выберите проект</option>
+                @foreach (var project in _projects)
                 {
                     <option value="@project.Id">@project.Name</option>
                 }
             </InputSelect>
-            <ValidationMessage For="@(() => intern.ProjectId)" />
+            <ValidationMessage For="@(() => _intern.ProjectId)" />
         </div>
 
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <button class="btn btn-secondary" @onclick="() => Cancel()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <button class="btn btn-secondary" @onclick="() => Cancel()">Отмена</button>
         </EditForm>
 }
 
@@ -91,17 +91,17 @@ else
     [Parameter]
     public int Id { get; set; }
 
-    private Intern? intern;
-    private List<Direction> directions = new();
-    private List<Project> projects = new();
+    private Intern? _intern;
+    private List<Direction> _directions = new();
+    private List<Project> _projects = new();
 
     protected override async Task OnInitializedAsync()
     {
         try 
         {
-            intern = await InternService.GetInternByIdAsync(Id);
-            directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
-            projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+            _intern = await InternService.GetInternByIdAsync(Id);
+            _directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+            _projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
         }
         catch (Exception ex)
         {
@@ -113,8 +113,7 @@ else
     {
         try
         {
-            Console.WriteLine("Submit");
-            await InternService.UpdateInternAsync(intern!);
+            await InternService.UpdateInternAsync(_intern!);
             NavigationManager.NavigateTo("/interns");
         }
         catch (Exception ex)
@@ -125,7 +124,6 @@ else
 
     private void Cancel()
     {
-        Console.WriteLine("Cancel");
         NavigationManager.NavigateTo("/interns");
     }
 }

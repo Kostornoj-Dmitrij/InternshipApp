@@ -1,19 +1,20 @@
 @page "/interns"
-@using Microsoft.AspNetCore.Components.Web
 @using task_for_66bit.Data.Models
 @using task_for_66bit.Services
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager NavigationManager
 @inject InternService InternService
 @inject ProjectService ProjectService
 @inject DirectionService DirectionService
 
-<h3>Interns List</h3>
+<h3>Список стажёров</h3>
 
 <div class="mb-3">
-    <label>Filter by Project:</label>
-    <select @bind="selectedProjectFilter" class="form-select w-50">
-        <option value="">All Projects</option>
-        @foreach (var project in projects)
+    <label>Фильтрация по проекту:</label>
+    <select @bind="_selectedProjectFilter" class="form-select w-50">
+        <option value="">Все проекты</option>
+        @foreach (var project in _projects)
         {
             <option value="@project.Id">@project.Name</option>
         }
@@ -21,40 +22,40 @@
 </div>
 
 <div class="mb-3">
-    <label>Filter by Direction:</label>
-    <select @bind="selectedDirectionFilter" class="form-select w-50">
-        <option value="">All Directions</option>
-        @foreach (var direction in directions)
+    <label>Фильтрация по направлению:</label>
+    <select @bind="_selectedDirectionFilter" class="form-select w-50">
+        <option value="">Все направления</option>
+        @foreach (var direction in _directions)
         {
             <option value="@direction.Id">@direction.Name</option>
         }
     </select>
 </div>
 
-<button @onclick="ApplyFilter" class="btn btn-primary">Apply Filter</button>
+<button @onclick="ApplyFilter" class="btn btn-primary">Применить фильтр</button>
 
-@if (filteredInterns.Any())
+@if (_filteredInterns.Any())
 {
-    <table>
-        <thead>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
         <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Project</th>
-            <th>Direction</th>
-            <th>Actions</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Почта</th>
+            <th scope="col">Номер телефона</th>
+            <th scope="col">Проект</th>
+            <th scope="col">Направление</th>
+            <th scope="col">Действия</th>
         </tr>
         </thead>
         <tbody>
-        @foreach (var intern in filteredInterns)
+        @foreach (var intern in _filteredInterns)
         {
             <tr>
                 <td>@intern.FirstName @intern.LastName</td>
                 <td>@intern.Email</td>
                 <td>@intern.PhoneNumber</td>
-                <td>@intern.Project?.Name</td>
-                <td>@intern.Direction?.Name</td>
+                <td>@intern.Project.Name</td>
+                <td>@intern.Direction.Name</td>
                 <td>
                     <button @onclick="() => EditIntern(intern)" class="btn btn-sm btn-warning">Edit</button>
                     <button @onclick="() => DeleteIntern(intern.Id)" class="btn btn-sm btn-danger">Delete</button>
@@ -70,52 +71,49 @@ else
 }
 
 @code {
-    private List<Intern> interns = new();
-    private List<Intern> filteredInterns = new();
-    private List<Project> projects = new();
-    private List<Direction> directions = new();
-    private int? selectedProjectFilter;
-    private int? selectedDirectionFilter;
+    private List<Intern> _interns = new();
+    private List<Intern> _filteredInterns = new();
+    private List<Project> _projects = new();
+    private List<Direction> _directions = new();
+    private int? _selectedProjectFilter;
+    private int? _selectedDirectionFilter;
 
     protected override async Task OnInitializedAsync()
     {
-        interns = (await InternService.GetAllInternsAsync()).ToList();
-        projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
-        directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
-        filteredInterns = interns.ToList();
+        _interns = (await InternService.GetAllInternsAsync()).ToList();
+        _projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+        _directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+        _filteredInterns = _interns.ToList();
     }
 
     private void ApplyFilter()
     {
-        filteredInterns = interns;
+        _filteredInterns = _interns;
 
-        if (selectedProjectFilter.HasValue)
+        if (_selectedProjectFilter.HasValue)
         {
-            filteredInterns = filteredInterns
-                .Where(i => i.Project?.Id == selectedProjectFilter.Value)
+            _filteredInterns = _filteredInterns
+                .Where(i => i.Project.Id == _selectedProjectFilter.Value)
                 .ToList();
         }
 
-        if (selectedDirectionFilter.HasValue)
+        if (_selectedDirectionFilter.HasValue)
         {
-            filteredInterns = filteredInterns
-                .Where(i => i.Direction?.Id == selectedDirectionFilter.Value)
+            _filteredInterns = _filteredInterns
+                .Where(i => i.Direction.Id == _selectedDirectionFilter.Value)
                 .ToList();
         }
     }
-    
 
     private void EditIntern(Intern intern)
     {
-        Console.WriteLine($"Editing intern: {intern.Id}");
         NavigationManager.NavigateTo($"/edit-intern/{intern.Id}");
     }
 
     private async Task DeleteIntern(int id)
-    {
-        Console.WriteLine($"Deleting intern: {id}");
+    { 
         await InternService.DeleteInternAsync(id);
-        interns = (await InternService.GetAllInternsAsync()).ToList();
-        filteredInterns = interns.ToList();
+        _interns = (await InternService.GetAllInternsAsync()).ToList();
+        _filteredInterns = _interns.ToList();
     }
 }

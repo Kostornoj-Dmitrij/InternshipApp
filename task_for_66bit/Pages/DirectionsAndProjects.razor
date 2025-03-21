@@ -1,8 +1,8 @@
 @page "/directions-projects"
 @using task_for_66bit.Data.Models
+@using task_for_66bit.Services
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Web
-@using task_for_66bit.Services
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.WebUtilities
 @inject DirectionService DirectionService
@@ -10,44 +10,44 @@
 @inject InternService InternService
 @inject NavigationManager NavigationManager
 
-<h3>Directions and Projects</h3>
+<h3>Направления и проекты</h3>
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (!string.IsNullOrEmpty(_errorMessage))
 {
     <div class="alert alert-danger" role="alert">
-        @errorMessage
+        @_errorMessage
     </div>
 }
 
 <ul class="nav nav-tabs">
     <li class="nav-item">
         <button @onclick="@(() => SwitchTab(TabType.Directions))"
-                class="nav-link @(activeTab == TabType.Directions ? "active" : "")">
-            Directions
+                class="nav-link @(_activeTab == TabType.Directions ? "active" : "")">
+            Направления
         </button>
     </li>
     <li class="nav-item">
         <button @onclick="@(() => SwitchTab(TabType.Projects))"
-                class="nav-link @(activeTab == TabType.Projects ? "active" : "")">
-            Projects
+                class="nav-link @(_activeTab == TabType.Projects ? "active" : "")">
+            Проекты
         </button>
     </li>
 </ul>
 
-@if (activeTab == TabType.Directions)
+@if (_activeTab == TabType.Directions)
 {
     <button class="btn btn-primary my-2" @onclick="() => ShowEditDirection(null)">Add Direction</button>
 
     <table class="table">
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Interns</th>
-            <th>Actions</th>
+            <th>Название</th>
+            <th>Стажёры</th>
+            <th>Действия</th>
         </tr>
         </thead>
         <tbody>
-        @foreach (var direction in directions)
+        @foreach (var direction in _directions)
         {
             <tr @key="direction.Id">
                 <td>@direction.Name</td>
@@ -58,28 +58,28 @@
                 </td>
                 <td>
                     <button class="btn btn-sm btn-warning"
-                            @onclick="() => ShowEditDirection(direction)">Edit</button>
+                            @onclick="() => ShowEditDirection(direction)">Изменить</button>
                     <button class="btn btn-sm btn-danger"
-                            @onclick="() => DeleteDirection(direction.Id)">Delete</button>
+                            @onclick="() => DeleteDirection(direction.Id)">Удалить</button>
                 </td>
             </tr>
         }
         </tbody>
     </table>
 }
-else if (activeTab == TabType.Projects)
+else if (_activeTab == TabType.Projects)
 {
-    <button class="btn btn-primary my-2" @onclick="() => ShowEditProject(null)">Add Project</button>
+    <button class="btn btn-primary my-2" @onclick="() => ShowEditProject(null)">Добавить проект</button>
     <table class="table">
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Interns</th>
-            <th>Actions</th>
+            <th>Название</th>
+            <th>Стажёры</th>
+            <th>Действия</th>
         </tr>
         </thead>
         <tbody>
-        @foreach (var project in projects)
+        @foreach (var project in _projects)
         {
             <tr>
                 <td>@project.Name</td>
@@ -90,29 +90,29 @@ else if (activeTab == TabType.Projects)
                 </td>
                 <td>
                     <button class="btn btn-sm btn-warning"
-                            @onclick="() => ShowEditProject(project)">Edit</button>
+                            @onclick="() => ShowEditProject(project)">Изменить</button>
                     <button class="btn btn-sm btn-danger"
-                            @onclick="() => DeleteProject(project.Id)">Delete</button>
+                            @onclick="() => DeleteProject(project.Id)">Удалить</button>
                 </td>
             </tr>
         }
         </tbody>
     </table>
 }
-@if (showDirectionModal)
+@if (_showDirectionModal)
 {
     <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(currentDirection.Id == 0 ? "Add" : "Edit") Direction</h5>
+                    <h5 class="modal-title">@(_currentDirection.Id == 0 ? "Add" : "Edit") Направление</h5>
                 </div>
                 <div class="modal-body">
-                    <EditForm Model="@currentDirection" OnValidSubmit="SaveDirection">
-                        <InputText @bind-Value="currentDirection.Name" class="form-control" />
-                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                    <EditForm Model="@_currentDirection" OnValidSubmit="SaveDirection">
+                        <InputText @bind-Value="_currentDirection.Name" class="form-control" />
+                        <button type="submit" class="btn btn-primary mt-2">Сохранить</button>
                         <button type="button" class="btn btn-secondary mt-2"
-                                @onclick="CloseDirectionModal">Cancel</button>
+                                @onclick="CloseDirectionModal">Отмена</button>
                     </EditForm>
                 </div>
             </div>
@@ -120,20 +120,20 @@ else if (activeTab == TabType.Projects)
     </div>
 }
 
-@if (showProjectModal)
+@if (_showProjectModal)
 {
     <div class="modal show" style="display: block">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(currentProject.Id == 0 ? "Add" : "Edit") Project</h5>
+                    <h5 class="modal-title">@(_currentProject.Id == 0 ? "Add" : "Edit") Проект</h5>
                 </div>
                 <div class="modal-body">
-                    <EditForm Model="@currentProject" OnValidSubmit="SaveProject">
-                        <InputText @bind-Value="currentProject.Name" class="form-control" />
-                        <button type="submit" class="btn btn-primary mt-2">Save</button>
+                    <EditForm Model="@_currentProject" OnValidSubmit="SaveProject">
+                        <InputText @bind-Value="_currentProject.Name" class="form-control" />
+                        <button type="submit" class="btn btn-primary mt-2">Сохранить</button>
                         <button type="button" class="btn btn-secondary mt-2"
-                                @onclick="CloseProjectModal">Cancel</button>
+                                @onclick="CloseProjectModal">Отмена</button>
                     </EditForm>
                 </div>
             </div>
@@ -141,18 +141,18 @@ else if (activeTab == TabType.Projects)
     </div>
 }
 
-@if (showInternsModal)
+@if (_showInternsModal)
 {
     <div class="modal show" style="display: block; background: rgba(0, 0, 0, 0.5)">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Interns</h5>
+                    <h5 class="modal-title">Стажёры</h5>
                     <button type="button" class="btn-close" @onclick="CloseInternsModal"></button>
                 </div>
                 <div class="modal-body">
                     <ul>
-                        @foreach (var intern in interns)
+                        @foreach (var intern in _interns)
                         {
                             <li>@intern.FirstName @intern.LastName</li>
                         }
@@ -165,56 +165,56 @@ else if (activeTab == TabType.Projects)
 
 <div class="mb-3">
     <label>Search:</label>
-    <input type="text" @bind="searchQuery" placeholder="Search..." class="form-control w-50" />
+    <input type="text" @bind="_searchQuery" placeholder="Search..." class="form-control w-50" />
 </div>
 
 <div class="mb-3">
-    <label>Sort By:</label>
-    <select @bind="sortField" class="form-control w-50">
-        <option value="Name">Name</option>
-        <option value="InternsCount">Interns Count</option>
+    <label>Сортировать по:</label>
+    <select @bind="_sortField" class="form-control w-50">
+        <option value="Name">Название</option>
+        <option value="InternsCount">Число стажёров</option>
     </select>
 </div>
 <div class="mb-3">
-    <label>Sort Order:</label>
-    <select @bind="sortOrder" class="form-control w-50">
-        <option value="asc">Ascending</option>
-        <option value="desc">Descending</option>
+    <label>Порядок сортировки:</label>
+    <select @bind="_sortOrder" class="form-control w-50">
+        <option value="asc">Возрастание</option>
+        <option value="desc">Убывание</option>
     </select>
 </div>
 <div class="mb-3">
-    <label class="me-2">Page:</label>
-    <input type="number" @bind="currentPage" min="1" class="form-control" placeholder="Page" />
-    <label class="me-2">Page Size:</label>
-    <input type="number" @bind="pageSize" min="1" class="form-control" placeholder="Page Size" />
+    <label class="me-2">Страница:</label>
+    <input type="number" @bind="_currentPage" min="1" class="form-control" placeholder="Page" />
+    <label class="me-2">Кол-во записей на странице:</label>
+    <input type="number" @bind="_pageSize" min="1" class="form-control" placeholder="Page Size" />
 </div>
 <button @onclick="LoadData" class="btn btn-primary">Apply</button>
 
 <!-- Кнопки для пагинации -->
 <div class="mt-3">
-    <button @onclick="PreviousPage" class="btn btn-secondary" disabled="@(currentPage == 1)">Previous</button>
-    <button @onclick="NextPage" class="btn btn-secondary" disabled="@(currentPage * pageSize >= totalCount)">Next</button>
+    <button @onclick="PreviousPage" class="btn btn-secondary" disabled="@(_currentPage == 1)">Предыдущая</button>
+    <button @onclick="NextPage" class="btn btn-secondary" disabled="@(_currentPage * _pageSize >= _totalCount)">Следующая</button>
 </div>
 
 @code {
-    private List<Direction> directions = new();
-    private List<Project> projects = new();
-    private bool showDirectionModal;
-    private List<Intern> interns = new();
-    private bool showProjectModal;
-    private Direction currentDirection = new();
-    private Project currentProject = new();
-    private string errorMessage = "";
+    private List<Direction> _directions = new();
+    private List<Project> _projects = new();
+    private bool _showDirectionModal;
+    private List<Intern> _interns = new();
+    private bool _showProjectModal;
+    private Direction _currentDirection = new();
+    private Project _currentProject = new();
+    private string _errorMessage = "";
     public enum TabType { Directions, Projects }
     
-    private TabType activeTab = TabType.Directions;
-    private string searchQuery = "";
-    private string sortField = "Name";
-    private string sortOrder = "asc";
-    private int currentPage = 1;
-    private int pageSize = 2;
-    private int totalCount = 0;
-    private bool showInternsModal;
+    private TabType _activeTab = TabType.Directions;
+    private string _searchQuery = "";
+    private string _sortField = "Name";
+    private string _sortOrder = "asc";
+    private int _currentPage = 1;
+    private int _pageSize = 2;
+    private int _totalCount;
+    private bool _showInternsModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -224,13 +224,13 @@ else if (activeTab == TabType.Projects)
     
     private async Task SwitchTab(TabType tab)
     {
-        errorMessage = "";
+        _errorMessage = "";
         if (!Enum.IsDefined(typeof(TabType), tab))
         {
             throw new ArgumentException("Invalid tab type");
         }
-        activeTab = tab;
-        if (activeTab == TabType.Directions) 
+        _activeTab = tab;
+        if (_activeTab == TabType.Directions) 
         {
             await LoadDirections();
         }
@@ -242,14 +242,14 @@ else if (activeTab == TabType.Projects)
         StateHasChanged();
     }
 
-    private async Task LoadDirections() => directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
-    private async Task LoadProjects() => projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
+    private async Task LoadDirections() => _directions = (await DirectionService.GetAllDirectionsAsync()).Directions.ToList();
+    private async Task LoadProjects() => _projects = (await ProjectService.GetAllProjectsAsync()).Projects.ToList();
 
     private void ShowEditDirection(Direction? direction)
     {
         if (direction != null)
         {
-            currentDirection = new Direction
+            _currentDirection = new Direction
             {
                 Id = direction.Id,
                 Name = direction.Name,
@@ -259,37 +259,36 @@ else if (activeTab == TabType.Projects)
         }
         else
         {
-            currentDirection = new Direction();
+            _currentDirection = new Direction();
         }
 
-        showDirectionModal = true;
+        _showDirectionModal = true;
         StateHasChanged();
     }
 
     private async Task SaveDirection()
     {
-        currentDirection.UpdatedAt = DateTime.UtcNow;
+        _currentDirection.UpdatedAt = DateTime.UtcNow;
 
-        if (currentDirection.Id == 0)
+        if (_currentDirection.Id == 0)
         {
-            await DirectionService.AddDirectionAsync(currentDirection);
+            await DirectionService.AddDirectionAsync(_currentDirection);
         }
         else
         {
-            await DirectionService.UpdateDirectionAsync(currentDirection);
+            await DirectionService.UpdateDirectionAsync(_currentDirection);
         }
 
         await LoadDirections();
-        showDirectionModal = false;
+        _showDirectionModal = false;
     }
 
     private async Task DeleteDirection(int id)
     {
-        Console.WriteLine("DeleteDirection");
-        var direction = directions.First(d => d.Id == id);
+        var direction = _directions.First(d => d.Id == id);
         if (direction.Interns.Any())
         {
-            errorMessage = "Нельзя удалить направление, в котором есть стажёры.";
+            _errorMessage = "Нельзя удалить направление, в котором есть стажёры.";
             return;
         }
         await DirectionService.DeleteDirectionAsync(id);
@@ -301,7 +300,7 @@ else if (activeTab == TabType.Projects)
     {
         if (project != null)
         {
-            currentProject = new Project
+            _currentProject = new Project
             {
                 Id = project.Id,
                 Name = project.Name,
@@ -311,36 +310,36 @@ else if (activeTab == TabType.Projects)
         }
         else
         {
-            currentProject = new Project();
+            _currentProject = new Project();
         }
 
-        showProjectModal = true;
+        _showProjectModal = true;
         StateHasChanged();
     }
     
     private async Task SaveProject()
     {
-        currentProject.UpdatedAt = DateTime.UtcNow;
+        _currentProject.UpdatedAt = DateTime.UtcNow;
 
-        if (currentProject.Id == 0)
+        if (_currentProject.Id == 0)
         {
-            await ProjectService.AddProjectAsync(currentProject);
+            await ProjectService.AddProjectAsync(_currentProject);
         }
         else
         {
-            await ProjectService.UpdateProjectAsync(currentProject);
+            await ProjectService.UpdateProjectAsync(_currentProject);
         }
 
         await LoadProjects();
-        showProjectModal = false;
+        _showProjectModal = false;
     }
 
     private async Task DeleteProject(int id)
     {
-        var project = projects.First(p => p.Id == id);
+        var project = _projects.First(p => p.Id == id);
         if (project.Interns.Any())
         {
-            errorMessage = "Нельзя удалить проект, в котором есть стажёры.";
+            _errorMessage = "Нельзя удалить проект, в котором есть стажёры.";
             return;
         }
         await ProjectService.DeleteProjectAsync(id);
@@ -350,33 +349,33 @@ else if (activeTab == TabType.Projects)
 
     private void CloseDirectionModal()
     {
-        showDirectionModal = false;
-        errorMessage = "";
+        _showDirectionModal = false;
+        _errorMessage = "";
         StateHasChanged();
     }
     private void CloseProjectModal()
     {
-        showProjectModal = false;
-        errorMessage = "";
+        _showProjectModal = false;
+        _errorMessage = "";
         StateHasChanged();
     }
     
     private async Task LoadData()
     {
-        bool isAscending = sortOrder == "asc";
-        if (activeTab == TabType.Directions)
+        bool isAscending = _sortOrder == "asc";
+        if (_activeTab == TabType.Directions)
         {
-            var result = await DirectionService.GetAllDirectionsAsync(searchQuery, sortField, isAscending, currentPage, pageSize);
-            directions = result.Directions.ToList();
-            totalCount = result.TotalCount;
+            var result = await DirectionService.GetAllDirectionsAsync(_searchQuery, _sortField, isAscending, _currentPage, _pageSize);
+            _directions = result.Directions.ToList();
+            _totalCount = result.TotalCount;
         }
         else
         {
-            var result = await ProjectService.GetAllProjectsAsync(searchQuery, sortField, isAscending, currentPage, pageSize);
-            projects = result.Projects.ToList();
-            totalCount = result.TotalCount;
+            var result = await ProjectService.GetAllProjectsAsync(_searchQuery, _sortField, isAscending, _currentPage, _pageSize);
+            _projects = result.Projects.ToList();
+            _totalCount = result.TotalCount;
         }
-        UpdateUrl(); // Обновляем URL после загрузки данных
+        UpdateUrl();
         StateHasChanged();
     }
     
@@ -384,37 +383,37 @@ else if (activeTab == TabType.Projects)
     {
         if (tabType == TabType.Directions)
         {
-            interns = (await InternService.GetInternsByDirectionIdAsync(id)).ToList();
+            _interns = (await InternService.GetInternsByDirectionIdAsync(id)).ToList();
         }
         else if (tabType == TabType.Projects)
         {
-            interns = (await InternService.GetInternsByProjectIdAsync(id)).ToList();
+            _interns = (await InternService.GetInternsByProjectIdAsync(id)).ToList();
         }
-        showInternsModal = true;
+        _showInternsModal = true;
         StateHasChanged();
     }
 
     private void CloseInternsModal()
     {
-        showInternsModal = false;
-        interns.Clear();
+        _showInternsModal = false;
+        _interns.Clear();
         StateHasChanged();
     }
     
     private async Task PreviousPage()
     {
-        if (currentPage > 1)
+        if (_currentPage > 1)
         {
-            currentPage--;
+            _currentPage--;
             await LoadData();
         }
     }
 
     private async Task NextPage()
     {
-        if (currentPage * pageSize < totalCount)
+        if (_currentPage * _pageSize < _totalCount)
         {
-            currentPage++;
+            _currentPage++;
             await LoadData();
         }
     }
@@ -422,12 +421,12 @@ else if (activeTab == TabType.Projects)
     {
         var uri = NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?>
         {
-            { "tab", activeTab.ToString() },
-            { "search", searchQuery },
-            { "sortField", sortField },
-            { "sortOrder", sortOrder },
-            { "page", currentPage },
-            { "pageSize", pageSize }
+            { "tab", _activeTab.ToString() },
+            { "search", _searchQuery },
+            { "sortField", _sortField },
+            { "sortOrder", _sortOrder },
+            { "page", _currentPage },
+            { "pageSize", _pageSize }
         });
         NavigationManager.NavigateTo(uri, forceLoad: false);
     }
@@ -438,32 +437,32 @@ else if (activeTab == TabType.Projects)
 
         if (queryParams.TryGetValue("tab", out var tab))
         {
-            activeTab = Enum.Parse<TabType>(tab);
+            _activeTab = Enum.Parse<TabType>(tab!);
         }
 
         if (queryParams.TryGetValue("search", out var search))
         {
-            searchQuery = search;
+            _searchQuery = search!;
         }
 
         if (queryParams.TryGetValue("sortField", out var sortFieldParam))
         {
-            sortField = sortFieldParam;
+            _sortField = sortFieldParam!;
         }
 
         if (queryParams.TryGetValue("sortOrder", out var sortOrderParam))
         {
-            sortOrder = sortOrderParam;
+            _sortOrder = sortOrderParam!;
         }
 
         if (queryParams.TryGetValue("page", out var page))
         {
-            currentPage = int.Parse(page);
+            _currentPage = int.Parse(page!);
         }
 
         if (queryParams.TryGetValue("pageSize", out var pageSizeParam))
         {
-            pageSize = int.Parse(pageSizeParam);
+            _pageSize = int.Parse(pageSizeParam!);
         }
     }
 }
